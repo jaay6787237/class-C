@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "plugins": [],
   "routes": [
     {
       "src": "/(.*)",
