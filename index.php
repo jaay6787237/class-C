@@ -180,9 +180,7 @@ if ($db_error) {
                             <div class="p-2.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-400/20">
                                 <i data-lucide="database" class="w-5 h-5"></i>
                             </div>
-                            <div class="text-left">
-                                <span class="text-xs text-slate-400 block">Ketersediaan Cloud</span>
-                                <span class="text-sm font-semibold text-white">Supabase PostgreSQL</span>
+                           
                             </div>
                         </div>
                     </div>
