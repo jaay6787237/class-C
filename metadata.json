@@ -1,0 +1,6 @@
+{
+  "name": "SISFO C '25",
+  "description": "Sistem Informasi Kelas C Angkatan 2025 - Portal kelas modern dengani manajemen jadwal kuliah, direktori mahasiswa, dan galeri kenangan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
