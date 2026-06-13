@@ -27,6 +27,7 @@ $error_message = null;
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jumlah_anggota = (int)($_POST['jumlah_anggota'] ?? 0);
+    $logo_url = $_POST['logo_url'] ?? '';
     $jadwal_json = $_POST['jadwal_raw'] ?? '[]';
     $media_json = $_POST['media_raw'] ?? '[]';
     $anggota_json = $_POST['anggota_raw'] ?? '[]';
@@ -36,11 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // 1. Updatesettings row (id = 1)
-            $stmtUpdateSettings = $pdo->prepare("UPDATE settings SET jumlah_anggota = :jumlah, jadwal = :jadwal, media = :media WHERE id = 1");
+            $stmtUpdateSettings = $pdo->prepare("UPDATE settings SET jumlah_anggota = :jumlah, jadwal = :jadwal, media = :media, logo_url = :logo WHERE id = 1");
             $stmtUpdateSettings->execute([
                 ':jumlah' => $jumlah_anggota,
                 ':jadwal' => $jadwal_json,
-                ':media' => $media_json
+                ':media' => $media_json,
+                ':logo' => $logo_url
             ]);
 
             // 2. Synchronize table anggotas
@@ -111,6 +113,7 @@ $jumlah_anggota = 0;
 $jadwal_array = [];
 $media_array = [];
 $anggotas_list = [];
+$logo_url = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop";
 
 if ($pdo) {
     try {
@@ -120,6 +123,7 @@ if ($pdo) {
             $jumlah_anggota = $settings['jumlah_anggota'];
             $jadwal_array = json_decode($settings['jadwal'], true) ?: [];
             $media_array = json_decode($settings['media'], true) ?: [];
+            $logo_url = isset($settings['logo_url']) && !empty($settings['logo_url']) ? $settings['logo_url'] : $logo_url;
         }
 
         // Fetch students lists
@@ -241,13 +245,24 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
                     </div>
                 </div>
                 
-                <div class="max-w-xs">
-                    <label for="jumlah_anggota" class="block text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Anggota Kelas</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">#</span>
-                        <input type="number" name="jumlah_anggota" id="jumlah_anggota" val="<?php echo htmlspecialchars($jumlah_anggota); ?>" value="<?php echo htmlspecialchars($jumlah_anggota); ?>" required class="w-full bg-navy-950 border border-navy-800 rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-white focus:outline-none focus:border-sky-500">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+                    <div>
+                        <label for="jumlah_anggota" class="block text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Anggota Kelas</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">#</span>
+                            <input type="number" name="jumlah_anggota" id="jumlah_anggota" val="<?php echo htmlspecialchars($jumlah_anggota); ?>" value="<?php echo htmlspecialchars($jumlah_anggota); ?>" required class="w-full bg-navy-950 border border-navy-800 rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-white focus:outline-none focus:border-sky-500">
+                        </div>
+                        <span class="text-[10px] text-slate-500 mt-1.5 block leading-normal font-sans">Mempengaruhi pencatatan jumlah statistik global di dashboard utama.</span>
                     </div>
-                    <span class="text-[10px] text-slate-500 mt-1.5 block leading-normal">Mempengaruhi pencatatan jumlah statistik global di dashboard utama.</span>
+
+                    <div>
+                        <label for="logo_url" class="block text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">Tautan Logo Kelas (URL Gambar)</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"><i data-lucide="image" class="w-4 h-4 text-slate-500"></i></span>
+                            <input type="url" name="logo_url" id="logo_url" value="<?php echo htmlspecialchars($logo_url); ?>" placeholder="Tinggalkan default untuk menggunakan logo hexagon bawaan" class="w-full bg-navy-950 border border-navy-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-sky-500 font-mono">
+                        </div>
+                        <span class="text-[10px] text-slate-500 mt-1.5 block leading-normal font-sans">URL gambar logo kelas SISFO C (HTTPS, rasio 1:1 direkomendasikan). Kosongkan untuk logo default.</span>
+                    </div>
                 </div>
             </section>
 
@@ -500,6 +515,40 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
             document.getElementById('btn-add-anggota').addEventListener('click', () => addAnggotaRow());
             document.getElementById('btn-add-media').addEventListener('click', () => addMediaRow());
 
+            // Client-side helper to validate image URL
+            function isValidImageUrl(url) {
+                if (!url) return false;
+                const trimmed = url.trim();
+                if (!/^https?:\/\//i.test(trimmed)) {
+                    return false;
+                }
+                try {
+                    const parsed = new URL(trimmed);
+                    const lowercaseUrl = trimmed.toLowerCase();
+                    const pathname = parsed.pathname.toLowerCase();
+                    
+                    const hasImageExtension = /\.(jpg|jpeg|png|webp|gif|svg|bmp)(\?|#|$)/i.test(pathname) || 
+                                             /\.(jpg|jpeg|png|webp|gif|svg|bmp)/i.test(lowercaseUrl);
+                    
+                    const isKnownImageHost = 
+                      lowercaseUrl.includes("unsplash.com") || 
+                      lowercaseUrl.includes("images.unsplash.com") ||
+                      lowercaseUrl.includes("googleusercontent.com") ||
+                      lowercaseUrl.includes("githubusercontent.com") ||
+                      lowercaseUrl.includes("imgur.com") ||
+                      lowercaseUrl.includes("cloudinary.com") ||
+                      lowercaseUrl.includes("gravatar.com") ||
+                      lowercaseUrl.includes("/photo-") ||
+                      lowercaseUrl.includes("/avatar") ||
+                      lowercaseUrl.includes("/img/") ||
+                      lowercaseUrl.includes("image");
+
+                    return hasImageExtension || isKnownImageHost;
+                } catch (e) {
+                    return false;
+                }
+            }
+
             // --- Form-Centric Dynamic Packaging Event Listener ---
             const form = document.getElementById('config-panel-form');
             form.addEventListener('submit', (e) => {
@@ -518,18 +567,45 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
                 });
                 document.getElementById('jadwal_raw').value = JSON.stringify(jadwalData);
 
-                // 2. Pack Anggota
+                // 2. Pack Anggota & Validate Foto
                 const anggotaRows = document.querySelectorAll('.anggota-row');
                 const anggotaData = [];
+                let hasInvalidFoto = false;
+                let firstInvalidInput = null;
+
                 anggotaRows.forEach(row => {
                     const id = row.querySelector('.input-agt-id').value;
                     const nama = row.querySelector('.input-agt-nama').value.trim();
-                    const foto = row.querySelector('.input-agt-foto').value.trim();
+                    const fotoInput = row.querySelector('.input-agt-foto');
+                    const foto = fotoInput.value.trim();
                     const bio = row.querySelector('.input-agt-bio').value.trim();
+                    
                     if (nama) {
+                        if (foto && !isValidImageUrl(foto)) {
+                            hasInvalidFoto = true;
+                            if (!firstInvalidInput) {
+                                firstInvalidInput = fotoInput;
+                            }
+                            fotoInput.classList.add('border-red-500', 'bg-red-500/10', 'text-red-200');
+                            fotoInput.classList.remove('border-navy-800');
+                        } else {
+                            fotoInput.classList.remove('border-red-500', 'bg-red-500/10', 'text-red-200');
+                            fotoInput.classList.add('border-navy-800');
+                        }
                         anggotaData.push({ id, nama, foto, bio });
                     }
                 });
+
+                if (hasInvalidFoto) {
+                    e.preventDefault();
+                    if (firstInvalidInput) {
+                        firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalidInput.focus();
+                    }
+                    alert("Gagal Menyimpan: Terdapat URL foto mahasiswa yang tidak valid format gambarnya (harus berupa tautan HTTP/HTTPS dengan ekstensi gambar, atau link dari unsplash/hosting valid).");
+                    return;
+                }
+
                 document.getElementById('anggota_raw').value = JSON.stringify(anggotaData);
 
                 // 3. Pack Media

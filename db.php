@@ -39,6 +39,13 @@ if (empty($host) || empty($dbname) || empty($username)) {
             );
         ");
 
+        // Add logo_url column to settings if not exists (Stateless database schema migration patterns)
+        try {
+            $pdo->exec("ALTER TABLE settings ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop';");
+        } catch (Exception $col_err) {
+            // Safe fallback if column already exists or driver doesn't support ADD COLUMN IF NOT EXISTS
+        }
+
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS anggotas (
                 id SERIAL PRIMARY KEY,

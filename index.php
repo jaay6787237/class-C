@@ -10,6 +10,7 @@ require_once __DIR__ . '/db.php';
 $jumlah_anggota = 0;
 $jadwal_array = [];
 $media_array = [];
+$logo_url = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop";
 
 if ($pdo) {
     try {
@@ -19,6 +20,7 @@ if ($pdo) {
             $jumlah_anggota = $settings['jumlah_anggota'];
             $jadwal_array = json_decode($settings['jadwal'], true) ?: [];
             $media_array = json_decode($settings['media'], true) ?: [];
+            $logo_url = isset($settings['logo_url']) && !empty($settings['logo_url']) ? $settings['logo_url'] : $logo_url;
         }
 
         // Fetch students list
@@ -32,6 +34,7 @@ if ($pdo) {
 // Fallback to demo data if DB error occurred or tables aren't configured yet (to ensure preview always looks great)
 if ($db_error) {
     $jumlah_anggota = 12;
+    $logo_url = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop";
     $jadwal_array = [
         ["hari" => "Senin", "matkul" => "Rekayasa Perangkat Lunak (Demo Mode)", "jam" => "08:00 - 10:30", "ruang" => "Lab Komputer 3", "dosen" => "Dr. Ir. Budi Santoso, M.T."],
         ["hari" => "Selasa", "matkul" => "Sistem Penunjang Keputusan", "jam" => "10:45 - 13:15", "ruang" => "Gedung C Ruang 204", "dosen" => "Rina Wijayanti, M.Kom."],
@@ -47,6 +50,17 @@ if ($db_error) {
         ["id" => 2, "nama" => "Siti Aminah", "foto" => "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400", "bio" => "UI/UX Designer & Product Lead. Suka mendesain antarmuka dengan sentuhan estetik."],
         ["id" => 3, "nama" => "Budi Pratama", "foto" => "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400", "bio" => "Fullstack developer magang yang hobi bermain catur dan tenis meja."]
     ];
+}
+
+// PHP ClassLogo SVG helper function to match React's perfectly!
+function renderClassLogo($className = "w-6 h-6", $glow = true) {
+    $effectClass = $glow ? "filter drop-shadow-[0_0_12px_rgba(56,189,248,0.7)]" : "";
+    return '
+    <svg class="' . $className . ' ' . $effectClass . '" viewBox="0 0 200 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="100,10 190,62 190,168 100,220 10,168 10,62" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round" class="opacity-20" />
+        <path d="M 100 35 L 165 72.5 L 165 105 L 100 67.5 L 58 92.5 L 58 120 L 100 95 L 142 120 L 142 147.5 L 100 122.5 L 35 85 L 100 47.5 Z" fill="#38bdf8" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round" />
+        <path d="M 100 195 L 35 157.5 L 35 125 L 100 162.5 L 142 137.5 L 142 110 L 100 135 L 58 110 L 58 82.5 L 100 107.5 L 165 145 L 100 182.5 Z" fill="#38bdf8" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round" />
+    </svg>';
 }
 ?>
 <!DOCTYPE html>
@@ -93,6 +107,51 @@ if ($db_error) {
         .glow-effect {
             box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.15);
         }
+
+        /* Float Logo Floating Animation to mimic Framer motion */
+        @keyframes float-logo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float-logo 6s ease-in-out infinite;
+        }
+
+        /* Pulse Blur Background */
+        @keyframes pulse-blur {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        .pulse-animation {
+            animation: pulse-blur 3s ease-in-out infinite;
+        }
+
+        /* Floating background particles */
+        @keyframes float-particle {
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+            33% { transform: translateY(-30px) translateX(12px) rotate(120deg) scale(1.05); }
+            66% { transform: translateY(-15px) translateX(20px) rotate(240deg) scale(0.98); }
+        }
+        .particle-hex {
+            animation: float-particle var(--duration, 20s) ease-in-out infinite;
+            animation-delay: var(--delay, 0s);
+        }
+
+        /* Smooth card glassmorphism hover transition classes */
+        .glass-card {
+            background-color: rgba(10, 18, 34, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            border-color: rgba(56, 189, 248, 0.45);
+            background-color: rgba(15, 27, 50, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.3);
+        }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500 selection:text-white min-h-screen flex flex-col">
@@ -109,9 +168,15 @@ if ($db_error) {
     <header class="border-b border-navy-800/80 bg-navy-950/80 backdrop-blur sticky top-0 z-50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="p-2.5 rounded-xl bg-gradient-to-br from-sky-450 to-sky-600 text-sky-400 border border-sky-500/30 shadow-lg shadow-sky-500/10">
-                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
-                </div>
+                <?php if (empty($logo_url) || strpos($logo_url, "unsplash.com/photo-1618005182384-a83a8bd57fbe") !== false): ?>
+                    <div class="p-1 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 text-sky-400 border border-sky-500/30 shadow-lg shadow-sky-500/10 flex items-center justify-center">
+                        <?php echo renderClassLogo("w-10 h-10", true); ?>
+                    </div>
+                <?php else: ?>
+                    <div class="w-12 h-12 rounded-xl border border-sky-500/30 shadow-lg shadow-sky-500/10 overflow-hidden shrink-0 bg-navy-900 flex items-center justify-center">
+                        <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="Logo Kelas" class="w-full h-full object-cover">
+                    </div>
+                <?php endif; ?>
                 <div>
                     <span class="font-display font-bold text-xl md:text-2xl uppercase tracking-wider bg-gradient-to-r from-sky-400 via-sky-200 to-indigo-400 bg-clip-text text-transparent">SISFO C '25</span>
                     <span class="hidden md:inline-block ml-2 text-xs font-mono px-2 py-0.5 rounded bg-navy-800 border border-navy-700/60 text-sky-300">Sistem Informasi</span>
@@ -144,44 +209,66 @@ if ($db_error) {
             <div class="absolute -right-20 -top-20 bg-sky-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -left-20 -bottom-20 bg-indigo-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
             
+            <!-- Ambient Floating Particles (PHP version of React's FloatingHexagons) -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <?php for ($i = 0; $i < 6; $i++): 
+                    $size = 100 + $i * 50;
+                    $delay = $i * 1.5;
+                    $duration = 22 + $i * 4;
+                    $opacity = 0.02 + ($i % 3) * 0.01;
+                    $top = 10 + $i * 14;
+                    $left = 5 + ($i * 19) % 80;
+                ?>
+                    <div class="absolute flex items-center justify-center particle-hex" style="width: <?php echo $size; ?>px; height: <?php echo $size; ?>px; top: <?php echo $top; ?>%; left: <?php echo $left; ?>%; --duration: <?php echo $duration; ?>s; --delay: <?php echo $delay; ?>s; opacity: <?php echo $opacity; ?>;">
+                        <svg viewBox="0 0 100 100" class="w-full h-full text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polygon points="50,5 93,30 93,80 50,105 7,80 7,30" />
+                        </svg>
+                    </div>
+                <?php endfor; ?>
+            </div>
+
             <div class="relative z-10 grid md:grid-cols-12 items-center gap-8 md:gap-12">
                 <div class="md:col-span-8 flex flex-col gap-5">
-                    <span class="inline-flex max-w-max bg-sky-500/10 text-sky-400 text-xs font-semibold font-mono tracking-wider uppercase px-3 py-1.5 rounded-full border border-sky-400/20">
-                        Website Koridor Angkatan 2025
+                    <span class="inline-flex max-w-max bg-sky-500/10 text-sky-450 border border-sky-500/20 text-xs font-bold font-mono tracking-wider uppercase px-3 py-1.5 rounded-full">
+                        🔥 Website Koridor Angkatan 2025
                     </span>
-                    <h1 class="font-display font-extrabold text-3xl md:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
-                        Integrasi Informasi Kelas <span class="text-sky-400 relative">Sistem Informasi C</span>
+                    <h1 class="font-sans font-extrabold text-3xl md:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
+                        Integrated Class Hub <span class="bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">SISFO C '25</span>
                     </h1>
-                    <p class="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
-                        Mewadahi direktori data akademik, keanggotaan mahasiswa, serta mendokumentasikan setiap mozaik cerita perjalanan perkuliahan kita di Universitas.
+                    <p class="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl font-sans">
+                        Mewadahi direktori data akademik, keanggotaan mahasiswa, serta mendokumentasikan setiap mozaik cerita perjalanan perkuliahan kita di Universitas secara dinamis.
                     </p>
                     <div class="flex flex-wrap gap-4 mt-2 justify-center md:justify-start">
-                        <a href="#mahasiswa" class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-medium text-sm md:text-base px-6 py-3 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] transform">
-                            <i data-lucide="users" class="w-5 h-5"></i> Lihat Direktori
+                        <a href="#mahasiswa" class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.03] transform">
+                            <i data-lucide="users" class="w-5 h-5"></i> Direktori Anggota
                         </a>
-                        <a href="#jadwal" class="inline-flex items-center gap-2 bg-navy-800 hover:bg-navy-700 text-slate-200 hover:text-white font-medium text-sm md:text-base px-6 py-3 rounded-xl border border-navy-700 transition-all">
-                            Tanggal Kuliah <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        <a href="#jadwal" class="inline-flex items-center gap-2 bg-navy-800 hover:bg-navy-700 text-slate-200 hover:text-white font-semibold text-sm px-6 py-3 rounded-xl border border-navy-700 transition-all hover:scale-[1.03]">
+                            Jadwal Kuliah <i data-lucide="arrow-right" class="w-4 h-4 text-sky-400"></i>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Statistics Card Side -->
-                <div class="md:col-span-4 w-full">
-                    <div class="bg-navy-950/80 border border-navy-800 rounded-2xl p-6 flex flex-col gap-6 md:max-w-xs ml-auto shadow-inner shadow-navy-950/20">
-                        <div class="text-center md:text-left">
-                            <span class="text-slate-400 text-sm font-medium">Jumlah Anggota Terdaftar</span>
-                            <div class="font-display font-extrabold text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-br from-sky-400 to-indigo-400 mt-2">
+                <!-- Statistics Card and Glow Logo Side -->
+                <div class="md:col-span-4 w-full flex flex-col items-center justify-center">
+                    <!-- Glowing Floating Logo Container -->
+                    <div class="relative w-40 h-40 flex items-center justify-center mb-4 float-animation">
+                        <div class="absolute inset-0 bg-sky-500/10 rounded-full blur-2xl pulse-animation"></div>
+                        <?php if (empty($logo_url) || strpos($logo_url, "unsplash.com/photo-1618005182384-a83a8bd57fbe") !== false): ?>
+                            <?php echo renderClassLogo("w-32 h-32 absolute z-10", true); ?>
+                        <?php else: ?>
+                            <div class="w-32 h-32 rounded-3xl overflow-hidden border-2 border-sky-500/30 shadow-lg shadow-sky-500/15 absolute z-10">
+                                <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="Class Logo" class="w-full h-full object-cover">
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="bg-navy-950/80 border border-navy-800/80 rounded-2xl p-6 w-full max-w-xs shadow-xl backdrop-blur-md">
+                        <div class="text-center">
+                            <span class="text-slate-450 text-xs font-mono uppercase tracking-wider block text-slate-400">Anggota Kelas</span>
+                            <div class="font-mono font-black text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 mt-2">
                                 <?php echo htmlspecialchars($jumlah_anggota); ?>
                             </div>
-                            <span class="text-xs text-sky-400/80 font-mono block mt-1">Sistem Informasi Angkatan 2025</span>
-                        </div>
-                        
-                        <div class="border-t border-navy-800 pt-5 flex items-center gap-3">
-                            <div class="p-2.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-400/20">
-                                <i data-lucide="database" class="w-5 h-5"></i>
-                            </div>
-                           
-                            </div>
+                            <span class="text-[10px] text-sky-450/80 font-mono block mt-1 tracking-wider text-sky-400">SISTEM INFORMASI C</span>
                         </div>
                     </div>
                 </div>
@@ -212,7 +299,7 @@ if ($db_error) {
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($jadwal_array as $index => $jw): ?>
-                        <div class="bg-navy-900 border border-navy-800/80 rounded-2xl p-6 hover:border-sky-500/30 transition-all duration-300 hover:shadow-lg shadow-sky-500/5 group flex flex-col justify-between">
+                        <div class="glass-card border border-navy-850 rounded-2xl p-6 group flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-4 border-b border-navy-800/60 pb-3">
                                     <span class="inline-flex bg-sky-500/10 text-sky-400 text-xs font-bold font-mono uppercase px-3 py-1 rounded border border-sky-400/15">
@@ -270,7 +357,7 @@ if ($db_error) {
             <?php else: ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     <?php foreach ($anggotas_list as $agt): ?>
-                        <div class="bg-navy-900 border border-navy-800 rounded-2xl overflow-hidden hover:border-sky-500/30 transition-all duration-300 hover:shadow-lg shadow-sky-500/5 group flex flex-col h-full">
+                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col h-full">
                             <!-- Image container with strict external URL source -->
                             <div class="relative pt-[110%] w-full bg-navy-950 overflow-hidden shrink-0 border-b border-navy-800">
                                 <?php if (!empty($agt['foto'])): ?>
@@ -328,7 +415,7 @@ if ($db_error) {
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($media_array as $med): ?>
-                        <div class="bg-navy-900 border border-navy-800 rounded-2xl overflow-hidden group flex flex-col">
+                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col">
                             <div class="relative pt-[56.25%] w-full bg-navy-950 overflow-hidden shrink-0">
                                 <?php if (($med['tipe'] ?? 'gambar') === 'video'): ?>
                                     <!-- Video Embed / HTML5 Video player -->
