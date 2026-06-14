@@ -450,7 +450,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
         const existingAnggotas = <?php echo json_encode($anggotas_list); ?>;
         const existingMedia = <?php echo json_encode($media_array); ?>;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const initAdminPanel = () => {
             const jadwalContainer = document.getElementById('jadwal-container');
             const mahasiswaContainer = document.getElementById('mahasiswa-container');
             const mediaContainer = document.getElementById('media-container');
@@ -696,7 +696,13 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
                 });
                 document.getElementById('media_raw').value = JSON.stringify(mediaData);
             });
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminPanel);
+        } else {
+            initAdminPanel();
+        }
     </script>
 </body>
 </html>

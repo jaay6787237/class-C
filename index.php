@@ -317,6 +317,13 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
             color: #0284c7 !important;
         }
     </style>
+    <!-- Safeguard: Uncover page and hide loader if JavaScript is disabled/unavailable -->
+    <noscript>
+        <style>
+            #welcome-overlay { display: none !important; }
+            .scroll-reveal { opacity: 1 !important; transform: none !important; }
+        </style>
+    </noscript>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500 selection:text-white min-h-screen flex flex-col">
 
@@ -744,11 +751,22 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
         }
 
         // --- 1. Cyber Welcome Screen Loader Logic ---
-        document.addEventListener('DOMContentLoaded', () => {
+        function runWelcomeLoader() {
             const progress = document.getElementById('welcome-progress');
             const statusText = document.getElementById('welcome-status');
             const overlay = document.getElementById('welcome-overlay');
             
+            // Fail-safe protection: If something stalls or fails elsewhere, ensure page opens after 3.5 seconds
+            const safetyTimeout = setTimeout(() => {
+                if (overlay && !overlay.classList.contains('welcome-fade-out')) {
+                    clearInterval(loaderInterval);
+                    overlay.classList.add('welcome-fade-out');
+                    document.querySelectorAll('.scroll-reveal').forEach(el => {
+                        revealObserver.observe(el);
+                    });
+                }
+            }, 3500);
+
             const bootLogs = [
                 { limit: 15, text: "DEKRIPSI INFRASTRUKTUR SISTEM..." },
                 { limit: 35, text: "KONFIGURASI ENKAPSULASI TEMA KULIAH..." },
@@ -779,6 +797,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
 
                 if (currentProgress >= 100) {
                     clearInterval(loaderInterval);
+                    clearTimeout(safetyTimeout);
                     setTimeout(() => {
                         if (overlay) {
                             overlay.classList.add('welcome-fade-out');
@@ -797,7 +816,13 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                     }, 200);
                 }
             }, stepTime);
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runWelcomeLoader);
+        } else {
+            runWelcomeLoader();
+        }
 
         // --- 2. Live Two-Way Scroll Reveal Observer Logic ---
         let lastScrollY = window.scrollY;

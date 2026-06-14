@@ -874,11 +874,22 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
         }
 
         // --- 1. Cyber Welcome Screen Loader Logic ---
-        document.addEventListener('DOMContentLoaded', () => {
+        function runWelcomeLoader() {
             const progress = document.getElementById('welcome-progress');
             const statusText = document.getElementById('welcome-status');
             const overlay = document.getElementById('welcome-overlay');
             
+            // Fail-safe protection: If something stalls or fails elsewhere, ensure page opens after 3.5 seconds
+            const safetyTimeout = setTimeout(() => {
+                if (overlay && !overlay.classList.contains('welcome-fade-out')) {
+                    clearInterval(loaderInterval);
+                    overlay.classList.add('welcome-fade-out');
+                    document.querySelectorAll('.scroll-reveal').forEach(el => {
+                        revealObserver.observe(el);
+                    });
+                }
+            }, 3500);
+
             const bootLogs = [
                 { limit: 15, text: "DEKRIPSI INFRASTRUKTUR SISTEM..." },
                 { limit: 35, text: "KONFIGURASI ENKAPSULASI TEMA KULIAH..." },
@@ -908,6 +919,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
 
                 if (currentProgress >= 100) {
                     clearInterval(loaderInterval);
+                    clearTimeout(safetyTimeout);
                     setTimeout(() => {
                         if (overlay) {
                             overlay.classList.add('welcome-fade-out');
@@ -921,7 +933,13 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                     }, 200);
                 }
             }, stepTime);
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runWelcomeLoader);
+        } else {
+            runWelcomeLoader();
+        }
 
         // --- 2. Live Two-Way Scroll Reveal Observer Logic ---
         let lastScrollY = window.scrollY;
@@ -1613,7 +1631,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
         const existingAnggotas = <?php echo json_encode($anggotas_list); ?>;
         const existingMedia = <?php echo json_encode($media_array); ?>;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const initAdminPanel = () => {
             const jadwalContainer = document.getElementById('jadwal-container');
             const mahasiswaContainer = document.getElementById('mahasiswa-container');
             const mediaContainer = document.getElementById('media-container');
@@ -1855,7 +1873,13 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
                 });
                 document.getElementById('media_raw').value = JSON.stringify(mediaData);
             });
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminPanel);
+        } else {
+            initAdminPanel();
+        }
     </script>
 </body>
 </html>
