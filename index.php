@@ -152,9 +152,128 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
             -webkit-backdrop-filter: blur(20px);
             box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.3);
         }
+
+        /* --- Welcome Animation Overlay Styles --- */
+        #welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #060b13;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+            will-change: opacity, transform;
+        }
+        #welcome-overlay.welcome-fade-out {
+            opacity: 0;
+            transform: scale(1.08);
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .welcome-pulse {
+            animation: welcome-glowing-pulse 2s infinite ease-in-out;
+        }
+        @keyframes welcome-glowing-pulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4)) drop-shadow(0 0 30px rgba(56, 189, 248, 0.2));
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 60px rgba(56, 189, 248, 0.4));
+            }
+        }
+        .text-tracking-expand {
+            animation: tracking-expand 1.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+        }
+        @keyframes tracking-expand {
+            0% {
+                letter-spacing: -0.5em;
+                opacity: 0;
+            }
+            40% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* --- Scroll Reveal Two-Way Styles --- */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(40px) scale(0.96);
+            transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity;
+        }
+        /* When scrolling down and revealing */
+        .scroll-reveal.reveal-up {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        /* When scrolling up and revealing from top down */
+        .scroll-reveal.reveal-down {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        /* Staggered Delay classes */
+        .stagger-1 { transition-delay: 50ms; }
+        .stagger-2 { transition-delay: 100ms; }
+        .stagger-3 { transition-delay: 150ms; }
+        .stagger-4 { transition-delay: 200ms; }
+        .stagger-5 { transition-delay: 250ms; }
+        .stagger-6 { transition-delay: 300ms; }
+        .stagger-7 { transition-delay: 350ms; }
+        .stagger-8 { transition-delay: 400ms; }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500 selection:text-white min-h-screen flex flex-col">
+
+    <!-- Glowing Cyberpunk Welcome Loader Screen -->
+    <div id="welcome-overlay" class="flex flex-col items-center justify-center">
+        <!-- Ambient glowing hexagons backdrops -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-20">
+            <div class="absolute bg-sky-500/10 w-[500px] h-[500px] rounded-full blur-3xl -top-40 -left-20"></div>
+            <div class="absolute bg-indigo-500/15 w-[600px] h-[600px] rounded-full blur-3xl -bottom-40 -right-20"></div>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center max-w-md px-6 text-center">
+            <!-- Pulsing Hex Shield Class Logo -->
+            <div class="welcome-pulse mb-8">
+                <?php if (empty($logo_url) || strpos($logo_url, "unsplash.com/photo-1618005182384-a83a8bd57fbe") !== false): ?>
+                    <?php echo renderClassLogo("w-32 h-32", true); ?>
+                <?php else: ?>
+                    <div class="w-32 h-32 rounded-3xl overflow-hidden border-2 border-sky-400 shadow-2xl">
+                        <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="Class Logo" class="w-full h-full object-cover">
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Letter Spacing Growing Header -->
+            <h1 class="text-tracking-expand font-display font-black text-3xl md:text-4xl tracking-[0.15em] text-white uppercase bg-gradient-to-r from-sky-450 via-sky-200 to-indigo-400 bg-clip-text text-transparent">
+                SISFO C '25
+            </h1>
+            <p class="font-mono text-xs tracking-[0.25em] text-sky-400 uppercase opacity-80 mt-2">
+                PORTAL CORRIDOR ANGKATAN
+            </p>
+
+            <!-- Custom Cyber Progress Bar -->
+            <div class="w-64 h-1 bg-navy-800/80 rounded-full mt-10 overflow-hidden relative border border-navy-700/40">
+                <div id="welcome-progress" class="h-full bg-gradient-to-r from-sky-450 via-sky-500 to-indigo-600 w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Animated Status Text -->
+            <div class="text-[10px] font-mono text-slate-500 mt-4 tracking-wider uppercase" id="welcome-status">
+                Memulai integrasi sistem...
+            </div>
+        </div>
+    </div>
 
     <!-- Database Warning Banner if DB Error exists -->
     <?php if ($db_error): ?>
@@ -205,7 +324,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         <!-- Hero Section -->
-        <section class="relative rounded-3xl overflow-hidden mb-16 py-14 px-8 md:px-16 bg-navy-900 border border-navy-800 glow-effect text-center md:text-left">
+        <section class="relative rounded-3xl overflow-hidden mb-16 py-14 px-8 md:px-16 bg-navy-900 border border-navy-800 glow-effect text-center md:text-left scroll-reveal">
             <div class="absolute -right-20 -top-20 bg-sky-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -left-20 -bottom-20 bg-indigo-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
             
@@ -236,7 +355,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                         Integrated Class Hub <span class="bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">SISFO C '25</span>
                     </h1>
                     <p class="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl font-sans">
-                        Mewadahi direktori data akademik, keanggotaan mahasiswa, serta mendokumentasikan setiap mozaik cerita perjalanan perkuliahan kita di Universitas secara dinamis.
+                        Mewadahi direktori data akademik, keanggotaan mahasiswa, serta mendokumentasikan setiap mozaik cerita perjalanan perkuliahan kita di UIN Raden Intan Lampung secara dinamis.
                     </p>
                     <div class="flex flex-wrap gap-4 mt-2 justify-center md:justify-start">
                         <a href="#mahasiswa" class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.03] transform">
@@ -277,7 +396,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
 
         <!-- Jadwal Kuliah Section -->
         <section id="jadwal" class="mb-16 scroll-mt-24">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 scroll-reveal">
                 <div class="flex items-center gap-3">
                     <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
                         <i data-lucide="calendar" class="w-6 h-6"></i>
@@ -299,7 +418,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($jadwal_array as $index => $jw): ?>
-                        <div class="glass-card border border-navy-850 rounded-2xl p-6 group flex flex-col justify-between">
+                        <div class="glass-card border border-navy-850 rounded-2xl p-6 group flex flex-col justify-between scroll-reveal stagger-<?php echo ($index % 8) + 1; ?>">
                             <div>
                                 <div class="flex items-center justify-between mb-4 border-b border-navy-800/60 pb-3">
                                     <span class="inline-flex bg-sky-500/10 text-sky-400 text-xs font-bold font-mono uppercase px-3 py-1 rounded border border-sky-400/15">
@@ -333,7 +452,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
 
         <!-- Direktori Mahasiswa Section -->
         <section id="mahasiswa" class="mb-16 scroll-mt-24">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 scroll-reveal">
                 <div class="flex items-center gap-3">
                     <div class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-550/20">
                         <i data-lucide="users" class="w-6 h-6"></i>
@@ -356,8 +475,8 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                 </div>
             <?php else: ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <?php foreach ($anggotas_list as $agt): ?>
-                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col h-full">
+                    <?php foreach ($anggotas_list as $index => $agt): ?>
+                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col h-full scroll-reveal stagger-<?php echo ($index % 8) + 1; ?>">
                             <!-- Image container with strict external URL source -->
                             <div class="relative pt-[110%] w-full bg-navy-950 overflow-hidden shrink-0 border-b border-navy-800">
                                 <?php if (!empty($agt['foto'])): ?>
@@ -393,7 +512,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
 
         <!-- Galeri Kenangan Section -->
         <section id="galeri" class="mb-16 scroll-mt-24">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 scroll-reveal">
                 <div class="flex items-center gap-3">
                     <div class="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
                         <i data-lucide="images" class="w-6 h-6"></i>
@@ -414,8 +533,8 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                 </div>
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php foreach ($media_array as $med): ?>
-                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col">
+                    <?php foreach ($media_array as $index => $med): ?>
+                        <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col scroll-reveal stagger-<?php echo ($index % 8) + 1; ?>">
                             <div class="relative pt-[56.25%] w-full bg-navy-950 overflow-hidden shrink-0">
                                 <?php if (($med['tipe'] ?? 'gambar') === 'video'): ?>
                                     <!-- Video Embed / HTML5 Video player -->
@@ -449,7 +568,6 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left text-xs md:text-sm text-slate-500 font-mono">
             <div>
                 <p>&copy; <?php echo date('Y'); ?> SISFO C '25. Sistem Informasi Kelas C 2025.</p>
-                <p class="text-[11px] text-slate-600 mt-1">Dibangun tanpa framework dengan Native PHP ditenagai Supabase PostgreSQL & Vercel.</p>
             </div>
             <div class="flex items-center gap-4">
                 <a href="#jadwal" class="hover:text-sky-400 transition-colors">Jadwal</a>
@@ -460,9 +578,105 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
         </div>
     </footer>
 
-    <!-- Initialize Lucide Icons -->
+    <!-- Initialize Lucide Icons & Page Animations -->
     <script>
         lucide.createIcons();
+
+        // --- 1. Cyber Welcome Screen Loader Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const progress = document.getElementById('welcome-progress');
+            const statusText = document.getElementById('welcome-status');
+            const overlay = document.getElementById('welcome-overlay');
+            
+            const bootLogs = [
+                { limit: 15, text: "DEKRIPSI INFRASTRUKTUR SISTEM..." },
+                { limit: 35, text: "KONFIGURASI ENKAPSULASI TEMA KULIAH..." },
+                { limit: 55, text: "MENGHUBUNGKAN DATABASE SUPABASE..." },
+                { limit: 75, text: "SINKRONISASI DATA KELAS VERIFIED..." },
+                { limit: 90, text: "MEMBANGUN MOZAIK CERITA MAHASISWA..." },
+                { limit: 100, text: "SISTEM SIAP, SELAMAT DATANG DI SISFO C!" }
+            ];
+
+            let currentProgress = 0;
+            const duration = 1200; // 1.2s loading sequence for punchy feel
+            const stepTime = 15;
+            const increment = (100 / (duration / stepTime));
+
+            const loaderInterval = setInterval(() => {
+                currentProgress += increment;
+                if (currentProgress > 100) currentProgress = 100;
+                
+                if (progress) {
+                    progress.style.width = currentProgress + '%';
+                }
+
+                // Update text based on current percentage range
+                const log = bootLogs.find(b => currentProgress <= b.limit) || bootLogs[bootLogs.length - 1];
+                if (statusText && statusText.textContent !== log.text) {
+                    statusText.textContent = log.text;
+                }
+
+                if (currentProgress >= 100) {
+                    clearInterval(loaderInterval);
+                    setTimeout(() => {
+                        if (overlay) {
+                            overlay.classList.add('welcome-fade-out');
+                            
+                            // DELAYED OBSERVER INITIALIZATION:
+                            // We delay registering the elements to the IntersectionObserver by 450ms.
+                            // This ensures elements within the initially visible fold (like the Hero area)
+                            // are not triggered prematurely behind the dark coverage of the welcome overlay,
+                            // allowing the user to experience a buttery-smooth entry fade-and-slide right as the page opens!
+                            setTimeout(() => {
+                                document.querySelectorAll('.scroll-reveal').forEach(el => {
+                                    revealObserver.observe(el);
+                                });
+                            }, 450);
+                        }
+                    }, 200);
+                }
+            }, stepTime);
+        });
+
+        // --- 2. Live Two-Way Scroll Reveal Observer Logic ---
+        let lastScrollY = window.scrollY;
+        let scrollDirection = 'down';
+
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY) {
+                scrollDirection = 'down';
+            } else if (currentScrollY < lastScrollY) {
+                scrollDirection = 'up';
+            }
+            lastScrollY = currentScrollY;
+        }, { passive: true });
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '100px 0px 100px 0px', // Generous buffer allows pre-transition before viewport entry and avoids premature fade-outs
+            threshold: 0
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (scrollDirection === 'down') {
+                        entry.target.classList.add('reveal-up');
+                        entry.target.classList.remove('reveal-down');
+                    } else {
+                        entry.target.classList.add('reveal-down');
+                        entry.target.classList.remove('reveal-up');
+                    }
+                } else {
+                    // Reset animations when scrolled out of view in either direction (allows two-way repeat play)
+                    entry.target.classList.remove('reveal-up', 'reveal-down');
+                }
+            });
+        }, observerOptions);
+
+        // Register observer to scroll animated nodes
+        // Handled dynamically inside Cyber Welcome overlay fade-out sequence above for maximum opening sensory impact!
     </script>
 </body>
 </html>

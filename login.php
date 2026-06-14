@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <h1 class="font-display font-extrabold text-2xl text-white tracking-tight">Portal Administrator</h1>
                 <p class="text-slate-400 text-xs md:text-sm mt-2 leading-relaxed">
-                    Masukkan kredensial khusus administrator pimpinan kelas untuk dapat mengedit preferensi akademik & direktori kelas.
+                     khusus administrator pimpinan kelas untuk dapat mengedit preferensi akademik & direktori kelas.
                 </p>
             </div>
 

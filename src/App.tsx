@@ -28,10 +28,13 @@ import {
   ExternalLink,
   Copy,
   Search,
-  X
+  X,
+  Sun,
+  Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Course, Student, MediaItem, Settings } from "./types";
+import { StudentCard } from "./components/StudentCard";
 
 // Geometric Hexagonal Logo alignment with user uploaded image
 export function ClassLogo({ className = "w-12 h-12", glow = true }: { className?: string; glow?: boolean }) {
@@ -72,14 +75,16 @@ export function ClassLogo({ className = "w-12 h-12", glow = true }: { className?
 }
 
 // Tech particle effect behind key sections
-export function FloatingHexagons() {
+export function FloatingHexagons({ theme = "dark" }: { theme?: string }) {
+  const isLight = theme === "light";
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       {[...Array(6)].map((_, i) => {
         const size = 100 + i * 50;
         const delay = i * 1.5;
         const duration = 22 + i * 4;
-        const opacity = 0.03 + (i % 3) * 0.015;
+        const opacity = isLight ? 0.02 + (i % 3) * 0.009 : 0.03 + (i % 3) * 0.015;
+        const strokeColor = isLight ? "rgba(14, 165, 233, 0.4)" : "currentColor";
         return (
           <motion.div
             key={i}
@@ -103,7 +108,7 @@ export function FloatingHexagons() {
               ease: "easeInOut",
             }}
           >
-            <svg viewBox="0 0 100 100" className="w-full h-full text-blue-500" style={{ opacity: opacity }} fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg viewBox="0 0 100 100" className="w-full h-full text-blue-500" style={{ opacity: opacity, color: strokeColor }} fill="none" stroke="currentColor" strokeWidth="1.5">
               <polygon points="50,5 93,30 93,80 50,105 7,80 7,30" />
             </svg>
           </motion.div>
@@ -432,8 +437,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 };
 
 export default function App() {
+  // Cyber Welcome screen states
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [welcomeProgress, setWelcomeProgress] = useState(0);
+  const [welcomeStatus, setWelcomeStatus] = useState("DEKRIPSI INFRASTRUKTUR SISTEM...");
+
   // State managers
   const [view, setView] = useState<"dashboard" | "login" | "admin" | "code_viewer">("dashboard");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    const saved = localStorage.getItem("sisfo-theme");
+    return saved === "light" ? "light" : "dark";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sisfo-theme", theme);
+  }, [theme]);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [successSaveNote, setSuccessSaveNote] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -467,6 +485,41 @@ export default function App() {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Cyber Welcome Screen Loader Timeline Simulation
+  useEffect(() => {
+    const bootLogs = [
+      { limit: 15, text: "DEKRIPSI INFRASTRUKTUR SISTEM..." },
+      { limit: 35, text: "KONFIGURASI ENKAPSULASI TEMA KULIAH..." },
+      { limit: 55, text: "MENGHUBUNGKAN DATABASE SUPABASE..." },
+      { limit: 75, text: "SINKRONISASI DATA KELAS VERIFIED..." },
+      { limit: 90, text: "MEMBANGUN MOZAIK CERITA MAHASISWA..." },
+      { limit: 100, text: "SISTEM SIAP, SELAMAT DATANG DI SISFO C!" }
+    ];
+
+    const duration = 1200; // 1.2 seconds total sequence duration
+    const stepTime = 15;
+    const increment = 100 / (duration / stepTime);
+
+    const loaderInterval = setInterval(() => {
+      setWelcomeProgress((prev) => {
+        const next = prev + increment;
+        if (next >= 100) {
+          clearInterval(loaderInterval);
+          setTimeout(() => {
+            setShowWelcome(false);
+          }, 350);
+          return 100;
+        }
+
+        const log = bootLogs.find(b => next <= b.limit) || bootLogs[bootLogs.length - 1];
+        setWelcomeStatus(log.text);
+        return next;
+      });
+    }, stepTime);
+
+    return () => clearInterval(loaderInterval);
+  }, []);
 
   // Load from LocalStorage or seed defaults
   useEffect(() => {
@@ -618,14 +671,94 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-300 font-sans flex flex-col justify-between selection:bg-blue-600 selection:text-white relative overflow-x-hidden cyber-grid">
+    <div className={`min-h-screen font-sans flex flex-col justify-between selection:bg-blue-600 selection:text-white relative overflow-x-hidden transition-colors duration-300 ${
+      theme === "light"
+        ? "bg-slate-50 text-slate-700"
+        : "bg-[#030712] text-slate-300 cyber-grid"
+    }`}>
+      {/* Cyberpunk Welcome Overlay Loader */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 bg-[#060b13] z-[9999] flex flex-col items-center justify-center select-none"
+          >
+            {/* Ambient background blur blobs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-20">
+              <div className="absolute bg-sky-500/10 w-[500px] h-[500px] rounded-full blur-3xl -top-40 -left-20"></div>
+              <div className="absolute bg-indigo-500/15 w-[600px] h-[600px] rounded-full blur-3xl -bottom-40 -right-20"></div>
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center max-w-md px-6 text-center">
+              {/* Pulsing Hex Shield Logo */}
+              <motion.div 
+                animate={{
+                  scale: [1, 1.05, 1],
+                  filter: [
+                    "drop-shadow(0 0 15px rgba(56,189,248,0.4))",
+                    "drop-shadow(0 0 30px rgba(56,189,248,0.7))",
+                    "drop-shadow(0 0 15px rgba(56,189,248,0.4))"
+                  ]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="mb-8"
+              >
+                {!configLogoUrl || configLogoUrl.includes("unsplash.com/photo-1618005182384-a83a8bd57fbe") ? (
+                  <ClassLogo className="w-32 h-32" />
+                ) : (
+                  <div className="w-32 h-32 rounded-3xl overflow-hidden border-2 border-sky-400 shadow-2xl">
+                    <img src={configLogoUrl} alt="Class Logo" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Spacing Expandable Class Title */}
+              <motion.h1 
+                initial={{ letterSpacing: "-0.2em", opacity: 0 }}
+                animate={{ letterSpacing: "0.15em", opacity: 1 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="font-display font-black text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-sky-200 to-indigo-400 uppercase tracking-widest"
+              >
+                SISFO C '25
+              </motion.h1>
+              <p className="font-mono text-[10px] tracking-[0.25em] text-sky-400 uppercase opacity-80 mt-2">
+                PORTAL CORRIDOR ANGKATAN
+              </p>
+
+              {/* Progress track */}
+              <div className="w-64 h-1 bg-slate-900/80 rounded-full mt-10 overflow-hidden relative border border-slate-800/40">
+                <div 
+                  className="h-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 transition-all duration-300"
+                  style={{ width: `${welcomeProgress}%` }}
+                ></div>
+              </div>
+
+              {/* Loading subtext log */}
+              <div className="text-[10px] font-mono text-slate-500 mt-4 tracking-wider uppercase">
+                {welcomeStatus}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating ambient theme hexagons in the background */}
-      <FloatingHexagons />
+      <FloatingHexagons theme={theme} />
 
       {/* Dynamic Warning Alert on Header */}
-      <div className="bg-sky-500/10 border-b border-sky-400/20 text-sky-400 py-3 px-4 text-center text-xs md:text-sm flex flex-col md:flex-row items-center justify-center gap-2 relative z-10">
+      <div className={`border-b py-3 px-4 text-center text-xs md:text-sm flex flex-col md:flex-row items-center justify-center gap-2 relative z-10 transition-colors duration-300 ${
+        theme === "light"
+          ? "bg-sky-50/80 border-sky-100 text-sky-700/90"
+          : "bg-sky-500/10 border-sky-400/20 text-sky-400"
+      }`}>
         <span className="flex items-center gap-1 font-semibold">
-          <Database className="w-4 h-4 text-sky-400" /> Mode Preview Interaktif:
+          <Database className={`w-4 h-4 ${theme === "light" ? "text-sky-600" : "text-sky-400"}`} /> Mode Preview Interaktif:
         </span>
         <span>Simulasi antarmuka portal kelas SISFO C '25. Edit konfigurasi langsung merubah preview!</span>
       </div>
@@ -651,7 +784,11 @@ export default function App() {
       </div>
 
       {/* Main Navigation Header: High Density Aesthetic */}
-      <header className="border-b border-sky-500/15 bg-[#030712]/90 backdrop-blur sticky top-0 z-40 transition-all duration-300 relative">
+      <header className={`border-b sticky top-0 z-40 transition-all duration-300 backdrop-blur-md relative ${
+        theme === "light"
+          ? "border-slate-200 bg-white/90 text-slate-800 shadow-sm"
+          : "border-sky-500/15 bg-[#030712]/90 text-slate-350"
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
           <div className="flex items-end justify-between md:justify-start gap-4">
             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView("dashboard")}>
@@ -660,7 +797,9 @@ export default function App() {
                   <ClassLogo className="w-full h-full" />
                 </div>
               ) : (
-                <div className="w-11 h-11 rounded-xl bg-sky-950/40 border border-sky-500/20 overflow-hidden flex items-center justify-center shrink-0 shadow-lg group transition-transform duration-300 group-hover:scale-110">
+                <div className={`w-11 h-11 rounded-xl border overflow-hidden flex items-center justify-center shrink-0 shadow-lg group transition-transform duration-300 group-hover:scale-110 ${
+                  theme === "light" ? "bg-slate-100 border-slate-250" : "bg-sky-950/40 border-sky-500/20"
+                }`}>
                   <img 
                     src={configLogoUrl} 
                     alt="Logo Kelas" 
@@ -673,9 +812,13 @@ export default function App() {
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase tracking-[0.25em] text-sky-400 font-bold mb-0.5">Academic Portal</span>
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tighter leading-none">
-                  SISFO <span className="text-sky-400">C</span> '25
+                <span className={`text-[9px] uppercase tracking-[0.25em] font-bold mb-0.5 transition-colors duration-300 ${
+                  theme === "light" ? "text-sky-600" : "text-sky-400"
+                }`}>Academic Portal</span>
+                <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tighter leading-none transition-colors duration-300 ${
+                  theme === "light" ? "text-slate-900" : "text-white"
+                }`}>
+                  SISFO <span className="text-sky-500 font-black">C</span> '25
                 </h1>
               </div>
             </div>
@@ -684,19 +827,25 @@ export default function App() {
             <div className="hidden lg:flex items-center gap-5 ml-8 pb-1">
               <button 
                 onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("jadwal")?.scrollIntoView({ behavior: "smooth" }), 100); }} 
-                className="text-xs uppercase tracking-wider text-slate-400 hover:text-blue-400 font-bold transition-colors cursor-pointer"
+                className={`text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer ${
+                  theme === "light" ? "text-slate-500 hover:text-sky-600" : "text-slate-400 hover:text-blue-400"
+                }`}
               >
                 Jadwal Kuliah
               </button>
               <button 
                 onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("mahasiswa")?.scrollIntoView({ behavior: "smooth" }), 100); }} 
-                className="text-xs uppercase tracking-wider text-slate-400 hover:text-blue-400 font-bold transition-colors cursor-pointer"
+                className={`text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer ${
+                  theme === "light" ? "text-slate-500 hover:text-sky-600" : "text-slate-400 hover:text-blue-400"
+                }`}
               >
                 Direktori Mahasiswa
               </button>
               <button 
                 onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("galeri")?.scrollIntoView({ behavior: "smooth" }), 100); }} 
-                className="text-xs uppercase tracking-wider text-slate-400 hover:text-blue-400 font-bold transition-colors cursor-pointer"
+                className={`text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer ${
+                  theme === "light" ? "text-slate-500 hover:text-sky-600" : "text-slate-400 hover:text-blue-400"
+                }`}
               >
                 Galeri Kenangan
               </button>
@@ -706,18 +855,26 @@ export default function App() {
           <div className="flex gap-6 items-center justify-between md:justify-end">
             {/* Dynamic Class Statistics from real states */}
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[10px] uppercase tracking-wider opacity-50 font-semibold">Class Statistics</span>
+              <span className={`text-[10px] uppercase tracking-wider font-semibold transition-colors duration-300 ${
+                theme === "light" ? "text-slate-400" : "opacity-50 text-slate-450"
+              }`}>Class Statistics</span>
               <div className="flex gap-4 mt-1">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-mono font-bold text-white leading-none">{configJumlahAnggota}</span>
+                  <span className={`text-lg font-mono font-bold leading-none transition-colors duration-300 ${
+                    theme === "light" ? "text-slate-900" : "text-white"
+                  }`}>{configJumlahAnggota}</span>
                   <span className="text-[10px] opacity-60">Anggota</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-mono font-bold text-white leading-none">{configJadwal.length * 4}</span>
+                  <span className={`text-lg font-mono font-bold leading-none transition-colors duration-300 ${
+                    theme === "light" ? "text-slate-900" : "text-white"
+                  }`}>{configJadwal.length * 4}</span>
                   <span className="text-[10px] opacity-60">SKS</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-mono font-bold text-white leading-none">3.82</span>
+                  <span className={`text-lg font-mono font-bold leading-none transition-colors duration-300 ${
+                    theme === "light" ? "text-slate-900" : "text-white"
+                  }`}>3.82</span>
                   <span className="text-[10px] opacity-60">Avg GPA</span>
                 </div>
               </div>
@@ -725,6 +882,23 @@ export default function App() {
 
             {/* Portal Action Buttons */}
             <div className="flex items-center gap-3">
+              {/* Modern Theme Light/Dark Mode Switcher */}
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                  theme === "light"
+                    ? "bg-slate-100 hover:bg-slate-200 border-slate-350 text-slate-800"
+                    : "bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                }`}
+                title={theme === "light" ? "Nyalakan Mode Gelap" : "Nyalakan Mode Terang"}
+              >
+                {theme === "light" ? (
+                  <Moon className="w-4 h-4 text-slate-800 animate-pulse" />
+                ) : (
+                  <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+                )}
+              </button>
+
               {isAdminLoggedIn ? (
                 <div className="flex items-center gap-2">
                   <button 
@@ -744,7 +918,11 @@ export default function App() {
               ) : (
                 <button 
                   onClick={() => setView("login")} 
-                  className="bg-[#060b13] hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg text-xs font-semibold text-white tracking-wide transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  className={`border px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                    theme === "light"
+                      ? "bg-white hover:bg-slate-100 border-slate-300 text-slate-800"
+                      : "bg-[#060b13] hover:bg-white/10 border-white/10 text-white"
+                  }`}
                 >
                   <Lock className="w-3.5 h-3.5" /> Admin Portal
                 </button>
@@ -761,25 +939,39 @@ export default function App() {
           {/* VIEW: Public Dashboard */}
           {view === "dashboard" && (
             <motion.main 
+              key="dashboard"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10"
             >
               {/* Hero Banner Grid layout - Hexagon Modern Theme */}
-              <section className="relative rounded-3xl overflow-hidden mb-10 py-12 px-6 md:px-12 bg-slate-950/40 border border-sky-500/20 shadow-sky-500/5 shadow-2xl backdrop-blur-sm">
+              <section className={`relative rounded-3xl overflow-hidden mb-10 py-12 px-6 md:px-12 transition-all duration-300 backdrop-blur-sm ${
+                theme === "light"
+                  ? "bg-gradient-to-br from-white to-sky-50/45 border border-slate-200/80 shadow-md shadow-slate-200/20 text-slate-800"
+                  : "bg-slate-950/40 border border-sky-500/20 shadow-sky-500/5 shadow-2xl"
+              }`}>
                 <div className="absolute -right-20 -top-20 bg-sky-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="absolute -left-20 -bottom-20 bg-blue-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div className="relative z-10 grid md:grid-cols-12 items-center gap-8 md:gap-10">
                   <div className="md:col-span-8 flex flex-col gap-5 text-left">
-                    <span className="inline-flex max-w-max bg-sky-500/10 text-sky-450 border border-sky-500/20 text-[10px] font-bold font-mono tracking-widest uppercase px-3 py-1 rounded-full">
+                    <span className={`inline-flex max-w-max text-[10px] font-bold font-mono tracking-widest uppercase px-3 py-1 rounded-full transition-colors duration-300 ${
+                      theme === "light"
+                        ? "bg-sky-50 text-sky-700 border border-sky-200"
+                        : "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                    }`}>
                       🔥 WEBSITE KORIDOR ANGKATAN 2025
                     </span>
-                    <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white tracking-tight leading-none">
+                    <h1 className={`font-sans font-extrabold text-3xl md:text-5xl tracking-tight leading-none transition-colors duration-300 ${
+                      theme === "light" ? "text-slate-900" : "text-white"
+                    }`}>
                       Integrated Class Hub <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300">SISFO C '25</span>
                     </h1>
-                    <p className="text-slate-350 text-sm md:text-base leading-relaxed max-w-2xl">
+                    <p className={`text-sm md:text-base leading-relaxed max-w-2xl transition-colors duration-300 ${
+                      theme === "light" ? "text-slate-600" : "text-slate-350"
+                    }`}>
                       Mewadahi direktori data akademik, keanggotaan mahasiswa, serta mendokumentasikan setiap mozaik cerita perjalanan perkuliahan kita di Universitas secara dinamis.
                     </p>
                     <div className="flex flex-wrap gap-3 mt-2">
@@ -791,9 +983,13 @@ export default function App() {
                       </button>
                       <button 
                         onClick={() => document.getElementById("jadwal")?.scrollIntoView({ behavior: "smooth" })}
-                        className="inline-flex items-center gap-1.5 bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-xs px-5 py-3 rounded-xl border border-sky-500/30 transition-all hover:scale-[1.03] cursor-pointer"
+                        className={`inline-flex items-center gap-1.5 font-semibold text-xs px-5 py-3 rounded-xl border transition-all hover:scale-[1.03] cursor-pointer ${
+                          theme === "light"
+                            ? "bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-705"
+                            : "bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white border border-sky-500/30"
+                        }`}
                       >
-                        Jadwal Kuliah <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                        Jadwal Kuliah <ArrowRight className="w-3.5 h-3.5 text-sky-500" />
                       </button>
                     </div>
                   </div>
@@ -815,13 +1011,25 @@ export default function App() {
                       <ClassLogo className="w-32 h-32 absolute z-10" />
                     </motion.div>
                     
-                    <div className="bg-slate-900/80 border border-sky-500/20 rounded-2xl p-5 w-full max-w-xs shadow-xl backdrop-blur-md">
+                    <div className={`rounded-2xl p-5 w-full max-w-xs transition-all duration-300 ${
+                      theme === "light"
+                        ? "bg-white border border-slate-200 shadow-md text-slate-800"
+                        : "bg-slate-900/80 border border-sky-500/20 shadow-xl backdrop-blur-md"
+                    }`}>
                       <div className="text-center">
-                        <span className="text-slate-400 text-[10px] font-mono uppercase tracking-wider block">Anggota Kelas</span>
-                        <div className="font-mono font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 mt-1">
+                        <span className={`text-[10px] font-mono uppercase tracking-wider block ${
+                          theme === "light" ? "text-slate-450" : "text-slate-400"
+                        }`}>Anggota Kelas</span>
+                        <div className={`font-mono font-black text-5xl mt-1 text-transparent bg-clip-text ${
+                          theme === "light"
+                            ? "bg-gradient-to-r from-sky-600 to-indigo-600"
+                            : "bg-gradient-to-r from-sky-400 to-cyan-300"
+                        }`}>
                           {configJumlahAnggota}
                         </div>
-                        <span className="text-[9px] text-sky-400/80 font-mono block mt-1 tracking-wide">SISTEM INFORMASI C</span>
+                        <span className={`text-[9px] font-mono block mt-1 tracking-wide ${
+                          theme === "light" ? "text-sky-650 font-bold" : "text-sky-400/80"
+                        }`}>SISTEM INFORMASI C</span>
                       </div>
                     </div>
                   </div>
@@ -833,23 +1041,37 @@ export default function App() {
                 id="jadwal" 
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: false, margin: "-100px" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-12 scroll-mt-24 bg-slate-950/40 rounded-3xl border border-sky-500/15 overflow-hidden backdrop-blur-sm shadow-xl"
+                className={`mb-12 scroll-mt-24 transition-all duration-300 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl ${
+                  theme === "light"
+                    ? "bg-white border border-slate-200/85 shadow-slate-200/30"
+                    : "bg-slate-950/40 border border-sky-500/15"
+                }`}
               >
-                <div className="p-5 border-b border-sky-500/15 bg-slate-950/60 flex justify-between items-center">
+                <div className={`p-5 border-b flex justify-between items-center transition-colors duration-300 ${
+                  theme === "light"
+                    ? "border-slate-200 bg-slate-50/70"
+                    : "border-sky-500/15 bg-slate-950/60"
+                }`}>
                   <div className="flex items-center gap-2.5">
-                    <Calendar className="w-4 h-4 text-sky-400 animate-pulse" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-white">Weekly Schedule</h2>
+                    <Calendar className={`w-4 h-4 animate-pulse ${theme === "light" ? "text-sky-600" : "text-sky-400"}`} />
+                    <h2 className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${
+                      theme === "light" ? "text-slate-800" : "text-white"
+                    }`}>Weekly Schedule</h2>
                   </div>
-                  <span className="px-2.5 py-1 rounded bg-sky-500/10 text-sky-400 text-[9px] font-bold uppercase font-mono border border-sky-500/10">SEMESTER 4</span>
+                  <span className={`px-2.5 py-1 rounded text-[9px] font-bold uppercase font-mono border transition-all duration-305 ${
+                    theme === "light"
+                      ? "bg-sky-50 text-sky-600 border-sky-200"
+                      : "bg-sky-500/10 text-sky-400 border-sky-500/10"
+                  }`}>SEMESTER 4</span>
                 </div>
 
                 {configJadwal.length === 0 ? (
                   <div className="p-16 text-center">
-                    <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-sm font-semibold text-white">Belum Ada Jadwal</h3>
-                    <p className="text-xs text-slate-400 mt-1">Silakan login sebagai admin untuk menambah entri jadwal akademik mingguan.</p>
+                    <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className={`text-sm font-semibold transition-colors duration-300 ${theme === "light" ? "text-slate-800" : "text-white"}`}>Belum Ada Jadwal</h3>
+                    <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Silakan login sebagai admin untuk menambah entri jadwal akademik mingguan.</p>
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -858,30 +1080,48 @@ export default function App() {
                         key={idx} 
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: false }}
                         transition={{ duration: 0.5, delay: idx * 0.05 }}
                         whileHover={{ 
                           y: -6, 
                           scale: 1.03, 
-                          borderColor: "rgba(56, 189, 248, 0.45)", 
-                          boxShadow: "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
+                          borderColor: theme === "light" ? "rgba(14, 165, 233, 0.45)" : "rgba(56, 189, 248, 0.45)", 
+                          boxShadow: theme === "light" 
+                            ? "0 10px 25px -10px rgba(14, 165, 233, 0.15)" 
+                            : "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
                         }}
-                        className="group p-5 bg-slate-950/40 backdrop-blur-md rounded-2xl border border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg transition-all duration-300 flex flex-col justify-between cursor-pointer shadow-lg"
+                        className={`group p-5 transition-all duration-300 flex flex-col justify-between cursor-pointer rounded-2xl border shadow-md ${
+                          theme === "light"
+                            ? "bg-white border-slate-200 hover:bg-slate-50/50"
+                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg"
+                        }`}
                       >
                         <div>
                           <div className="flex justify-between items-center mb-3">
-                            <span className="text-sky-400 text-[10px] font-bold font-mono tracking-wider uppercase bg-sky-500/10 px-2.5 py-0.5 rounded">
+                            <span className={`text-[10px] font-bold font-mono tracking-wider uppercase px-2.5 py-0.5 rounded transition-all duration-305 ${
+                              theme === "light"
+                                ? "bg-sky-50 text-sky-600"
+                                : "bg-sky-500/10 text-sky-400"
+                            }`}>
                               {jw.hari || "HARI -"} &bull; {jw.jam || "JAM -"}
                             </span>
-                            <span className="text-[10px] opacity-50 font-mono italic flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-sky-400" /> {jw.ruang || "-"}
+                            <span className={`text-[10px] font-mono italic flex items-center gap-1 transition-colors duration-305 ${
+                              theme === "light" ? "text-slate-400" : "opacity-50 text-slate-300"
+                            }`}>
+                              <MapPin className={`w-3 h-3 ${theme === "light" ? "text-sky-600" : "text-sky-400"}`} /> {jw.ruang || "-"}
                             </span>
                           </div>
-                          <div className="text-base font-bold text-white group-hover:text-sky-400 transition-colors line-clamp-1 mb-2">
+                          <div className={`text-base font-bold transition-colors line-clamp-1 mb-2 ${
+                            theme === "light"
+                              ? "text-slate-800 group-hover:text-sky-600"
+                              : "text-white group-hover:text-sky-400"
+                          }`}>
                             {jw.matkul || "Mata Kuliah -"}
                           </div>
-                          <div className="text-xs opacity-60 flex items-center gap-1.5 pt-2 border-t border-sky-500/5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                          <div className={`text-xs flex items-center gap-1.5 pt-2 border-t transition-colors duration-305 ${
+                            theme === "light" ? "border-slate-150 text-slate-500" : "border-sky-500/5 opacity-60"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${theme === "light" ? "bg-sky-500" : "bg-sky-400"}`}></span>
                             <span className="truncate">{jw.dosen || "Dosen Pengampu"}</span>
                           </div>
                         </div>
@@ -896,24 +1136,42 @@ export default function App() {
                 id="mahasiswa" 
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: false, margin: "-100px" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-12 scroll-mt-24 bg-slate-950/40 rounded-3xl border border-sky-500/15 overflow-hidden backdrop-blur-sm shadow-xl"
+                className={`mb-12 scroll-mt-24 transition-all duration-300 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl ${
+                  theme === "light"
+                    ? "bg-white border border-slate-200/85 shadow-slate-200/30"
+                    : "bg-slate-950/40 border border-sky-500/15"
+                }`}
               >
-                <div className="p-5 border-b border-sky-500/15 bg-slate-950/60 flex justify-between items-center">
+                <div className={`p-5 border-b flex justify-between items-center transition-colors duration-300 ${
+                  theme === "light"
+                    ? "border-slate-200 bg-slate-50/70"
+                    : "border-sky-500/15 bg-slate-950/60"
+                }`}>
                   <div className="flex items-center gap-2.5">
-                    <Users className="w-4 h-4 text-sky-400 animate-pulse" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-white">Student Directory</h2>
+                    <Users className={`w-4 h-4 animate-pulse ${theme === "light" ? "text-sky-600" : "text-sky-400"}`} />
+                    <h2 className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${
+                      theme === "light" ? "text-slate-800" : "text-white"
+                    }`}>Student Directory</h2>
                   </div>
-                  <span className="px-2.5 py-1 rounded bg-sky-500/10 text-sky-400 text-[9px] font-bold uppercase font-mono border border-sky-500/10">
+                  <span className={`px-2.5 py-1 rounded text-[9px] font-bold uppercase font-mono border transition-all duration-305 ${
+                    theme === "light"
+                      ? "bg-sky-50 text-sky-600 border-sky-200"
+                      : "bg-sky-500/10 text-sky-400 border-sky-500/10"
+                  }`}>
                     TOTAL: {configStudents.length} PROFIL
                   </span>
                 </div>
 
                 {configStudents.length > 0 && (
-                  <div className="px-5 py-4 bg-slate-900/20 border-b border-sky-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className={`px-5 py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${
+                    theme === "light" ? "bg-slate-50/40 border-slate-205" : "bg-slate-900/20 border-sky-500/10"
+                  }`}>
                     <div className="relative flex-1 max-w-md w-full">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400/65">
+                      <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${
+                        theme === "light" ? "text-sky-600/70" : "text-sky-400/65"
+                      }`}>
                         <Search className="w-4 h-4" />
                       </span>
                       <input 
@@ -921,21 +1179,31 @@ export default function App() {
                         placeholder="Cari nama atau bio mahasiswa..."
                         value={mhsSearchQuery}
                         onChange={(e) => setMhsSearchQuery(e.target.value)}
-                        className="w-full bg-slate-950/60 border border-sky-500/15 rounded-xl py-2 pl-10 pr-9 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all font-sans"
+                        className={`w-full border rounded-xl py-2 pl-10 pr-9 text-xs font-semibold focus:outline-none focus:ring-1 transition-all font-sans ${
+                          theme === "light"
+                            ? "bg-white border-slate-300 text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:ring-sky-500"
+                            : "bg-slate-950/60 border-sky-500/15 text-white placeholder-slate-500 focus:border-sky-500 focus:ring-sky-500"
+                        }`}
                       />
                       {mhsSearchQuery && (
                         <button 
                           onClick={() => setMhsSearchQuery("")}
                           aria-label="Clear search"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-pointer ${
+                            theme === "light" ? "text-slate-400 hover:text-slate-800" : "text-slate-500 hover:text-white"
+                          }`}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                    <div className={`flex items-center gap-2 text-[10px] font-mono ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>
                       <span>Hasil filter:</span>
-                      <span className="text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded border border-sky-500/10 font-bold max-w-max">
+                      <span className={`px-2.5 py-0.5 rounded border font-bold max-w-max transition-colors duration-350 ${
+                        theme === "light"
+                          ? "bg-sky-50 text-sky-700 border-sky-200"
+                          : "text-sky-400 bg-sky-500/10 border-sky-500/10"
+                      }`}>
                         {filteredStudents.length} dari {configStudents.length}
                       </span>
                     </div>
@@ -944,58 +1212,20 @@ export default function App() {
 
                 {configStudents.length === 0 ? (
                   <div className="p-16 text-center">
-                    <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-sm font-semibold text-white">Database Mahasiswa Kosong</h3>
-                    <p className="text-xs text-slate-400 mt-1">Masuk ke Panel Admin untuk menambah data profil mahasiswa.</p>
+                    <Users className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className={`text-sm font-semibold transition-colors duration-305 ${theme === "light" ? "text-slate-800" : "text-white"}`}>Database Mahasiswa Kosong</h3>
+                    <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Masuk ke Panel Admin untuk menambah data profil mahasiswa.</p>
                   </div>
                 ) : filteredStudents.length === 0 ? (
                   <div className="p-16 text-center">
-                    <Search className="w-12 h-12 text-slate-650 mx-auto mb-3 animate-pulse" />
-                    <h3 className="text-sm font-semibold text-white">Tidak Menemukan Profil</h3>
-                    <p className="text-xs text-slate-400 mt-1">Pencarian untuk "{mhsSearchQuery}" tidak cocok dengan data classmate manapun.</p>
+                    <Search className="w-12 h-12 text-slate-400 mx-auto mb-3 animate-pulse" />
+                    <h3 className={`text-sm font-semibold transition-colors duration-305 ${theme === "light" ? "text-slate-800" : "text-white"}`}>Tidak Menemukan Profil</h3>
+                    <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Pencarian untuk "{mhsSearchQuery}" tidak cocok dengan data classmate manapun.</p>
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredStudents.map((agt, i) => (
-                      <motion.div 
-                        key={i} 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: (i % 8) * 0.04 }}
-                        whileHover={{ 
-                          y: -5, 
-                          scale: 1.03, 
-                          borderColor: "rgba(56, 189, 248, 0.45)", 
-                          boxShadow: "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
-                        }}
-                        className="flex items-center gap-4.5 p-3.5 bg-slate-950/40 backdrop-blur-md rounded-2xl border border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg transition-all duration-300 cursor-pointer shadow-lg"
-                      >
-                        <div className="w-11 h-11 rounded-xl bg-sky-950/50 border border-sky-500/30 flex items-center justify-center text-xs font-bold text-sky-400 overflow-hidden shrink-0">
-                          {agt.foto ? (
-                            <img 
-                              src={agt.foto} 
-                              referrerPolicy="no-referrer" 
-                              alt="" 
-                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-110" 
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).onerror = null;
-                                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=300";
-                              }}
-                            />
-                          ) : (
-                            <span>{agt.nama ? agt.nama.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "SI"}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-bold text-white truncate" title={agt.nama}>
-                            {agt.nama || "Nama Mahasiswa"}
-                          </div>
-                          <div className="text-[10px] text-sky-400/80 truncate mt-0.5 leading-tight font-medium" title={agt.bio}>
-                            {agt.bio || "Sistem Informasi C '25"}
-                          </div>
-                        </div>
-                      </motion.div>
+                      <StudentCard key={i} agt={agt} index={i} theme={theme} />
                     ))}
                   </div>
                 )}
@@ -1006,23 +1236,37 @@ export default function App() {
                 id="galeri" 
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: false, margin: "-100px" }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-6 scroll-mt-24 bg-slate-950/40 rounded-3xl border border-sky-500/15 overflow-hidden backdrop-blur-sm shadow-xl"
+                className={`mb-6 scroll-mt-24 transition-all duration-300 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl ${
+                  theme === "light"
+                    ? "bg-white border border-slate-200/85 shadow-slate-200/30"
+                    : "bg-slate-950/40 border border-sky-500/15"
+                }`}
               >
-                <div className="p-5 border-b border-sky-500/15 bg-slate-950/60 flex justify-between items-center">
+                <div className={`p-5 border-b flex justify-between items-center transition-colors duration-300 ${
+                  theme === "light"
+                    ? "border-slate-200 bg-slate-50/70"
+                    : "border-sky-500/15 bg-slate-950/60"
+                }`}>
                   <div className="flex items-center gap-2.5">
-                    <Images className="w-4 h-4 text-sky-400 animate-pulse" />
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-white">Class Gallery</h2>
+                    <Images className={`w-4 h-4 animate-pulse ${theme === "light" ? "text-sky-600" : "text-sky-400"}`} />
+                    <h2 className={`text-xs font-bold uppercase tracking-widest transition-colors duration-300 ${
+                      theme === "light" ? "text-slate-800" : "text-white"
+                    }`}>Class Gallery</h2>
                   </div>
-                  <span className="text-[9px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/10 uppercase font-bold tracking-wider">MEDIA ARCHIVE</span>
+                  <span className={`px-2.5 py-1 rounded text-[9px] font-bold uppercase font-mono border transition-all duration-305 ${
+                    theme === "light"
+                      ? "bg-sky-50 text-sky-600 border-sky-200"
+                      : "bg-sky-500/10 text-sky-400 border-sky-500/10"
+                  }`}>MEDIA ARCHIVE</span>
                 </div>
 
                 {configMedia.length === 0 ? (
                   <div className="p-16 text-center">
-                    <Images className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-sm font-semibold text-white">Album Belum Terisi</h3>
-                    <p className="text-xs text-slate-400 mt-1">Tautkan media kenangan kelas Anda di menu panel admin.</p>
+                    <Images className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className={`text-sm font-semibold transition-colors duration-305 ${theme === "light" ? "text-slate-800" : "text-white"}`}>Album Belum Terisi</h3>
+                    <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Tautkan media kenangan kelas Anda di menu panel admin.</p>
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1031,17 +1275,25 @@ export default function App() {
                         key={idx} 
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: false }}
                         transition={{ duration: 0.5, delay: idx * 0.05 }}
                         whileHover={{ 
                           y: -6, 
                           scale: 1.03, 
-                          borderColor: "rgba(56, 189, 248, 0.45)", 
-                          boxShadow: "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
+                          borderColor: theme === "light" ? "rgba(14, 165, 233, 0.45)" : "rgba(56, 189, 248, 0.45)", 
+                          boxShadow: theme === "light" 
+                            ? "0 10px 25px -10px rgba(14, 165, 233, 0.15)" 
+                            : "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
                         }}
-                        className="bg-slate-950/40 backdrop-blur-md rounded-2xl border border-sky-500/10 overflow-hidden group flex flex-col justify-between hover:bg-slate-900/50 hover:backdrop-blur-lg transition-all duration-300 cursor-pointer shadow-lg"
+                        className={`overflow-hidden group flex flex-col justify-between transition-all duration-300 cursor-pointer rounded-2xl border shadow-md ${
+                          theme === "light"
+                            ? "bg-white border-slate-200 hover:bg-slate-50/50"
+                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg"
+                        }`}
                       >
-                        <div className="relative aspect-[16/9] w-full bg-slate-950 overflow-hidden shrink-0 border-b border-sky-500/10">
+                        <div className={`relative aspect-[16/9] w-full bg-slate-950 overflow-hidden shrink-0 border-b ${
+                          theme === "light" ? "border-slate-100" : "border-sky-500/10"
+                        }`}>
                           {med.tipe === "video" ? (
                             <video controls className="absolute inset-0 w-full h-full object-cover">
                               <source src={med.url} type="video/mp4" />
@@ -1065,8 +1317,12 @@ export default function App() {
                             </>
                           )}
                         </div>
-                        <div className="p-4 bg-slate-950/20 flex-grow">
-                          <p className="text-xs text-slate-350 leading-relaxed line-clamp-2 italic">
+                        <div className={`p-4 flex-grow transition-colors duration-300 ${
+                          theme === "light" ? "bg-slate-50/30" : "bg-slate-950/20"
+                        }`}>
+                          <p className={`text-xs leading-relaxed line-clamp-2 italic ${
+                            theme === "light" ? "text-slate-600 font-medium" : "text-slate-350"
+                          }`}>
                             "{med.keterangan || "Memori dokumentasi kebersamaan kelas C."}"
                           </p>
                         </div>
@@ -1081,9 +1337,11 @@ export default function App() {
           {/* VIEW: Login Admin Gate */}
           {view === "login" && (
             <motion.main 
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
+              key="login"
+              initial={{ opacity: 0, y: 15, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="flex-grow flex items-center justify-center p-4 py-16"
             >
               <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden">
@@ -1169,9 +1427,11 @@ export default function App() {
           {/* VIEW: Control Center Admin Panel */}
           {view === "admin" && (
             <motion.main 
+              key="admin"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8"
             >
               {/* Success Save Notification bar */}
@@ -1551,17 +1811,27 @@ export default function App() {
           {/* VIEW: PHP Code Tab Viewer */}
           {view === "code_viewer" && (
             <motion.main 
+              key="code_viewer"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8"
             >
               <div className="mb-8">
-                <span className="text-xs bg-sky-500/10 text-sky-400 px-3 py-1.5 rounded-full font-mono border border-sky-400/20 uppercase font-bold">
+                <span className={`text-xs px-3 py-1.5 rounded-full font-mono border uppercase font-bold transition-all duration-300 ${
+                  theme === "light"
+                    ? "bg-sky-50 text-sky-700 border-sky-200"
+                    : "bg-sky-500/10 text-sky-400 border-sky-400/20"
+                }`}>
                   Arsitektur Ekspor Vercel PHP + Supabase
                 </span>
-                <h1 className="font-display font-extrabold text-2xl md:text-4xl text-white mt-3">Native PHP Code Explorer</h1>
-                <p className="text-slate-405 text-slate-400 text-sm mt-1 max-w-3xl leading-relaxed">
+                <h1 className={`font-display font-extrabold text-2xl md:text-4xl mt-3 transition-colors duration-300 ${
+                  theme === "light" ? "text-slate-900" : "text-white"
+                }`}>Native PHP Code Explorer</h1>
+                <p className={`text-slate-400 text-sm mt-1 max-w-3xl leading-relaxed transition-colors duration-300 ${
+                  theme === "light" ? "text-slate-600" : "text-slate-400"
+                }`}>
                   Kami telah membuat seluruh berkas PHP yang Anda butuhkan secara lengkap, andal, modular, dan terstruktur sesuai rancangan stateless serverless Vercel dan Supabase PostgreSQL. Anda dapat menyalin kode instan ini untuk disinkronkan ke repositori Anda!
                 </p>
               </div>
@@ -1569,15 +1839,21 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Navigator Rail left */}
                 <div className="lg:col-span-3 flex flex-col gap-2">
-                  <span className="text-slate-500 text-[10px] font-mono tracking-wider font-bold uppercase mb-1">Daftar Berkas PHP</span>
+                  <span className={`text-[10px] font-mono tracking-wider font-bold uppercase mb-1 transition-colors ${
+                    theme === "light" ? "text-slate-400" : "text-slate-500"
+                  }`}>Daftar Berkas PHP</span>
                   {Object.keys(PHP_SOURCES).map((fileName) => (
                     <button
                       key={fileName}
                       onClick={() => setActivePHPFile(fileName as any)}
                       className={`w-full text-left font-mono text-xs px-4 py-3 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
                         activePHPFile === fileName
-                          ? "bg-sky-500/10 border-sky-500/30 text-sky-400 font-bold"
-                          : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                          ? theme === "light"
+                            ? "bg-sky-50 border-sky-300 text-sky-700 font-bold"
+                            : "bg-sky-500/10 border-sky-500/30 text-sky-400 font-bold"
+                          : theme === "light"
+                            ? "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+                            : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1588,32 +1864,46 @@ export default function App() {
                     </button>
                   ))}
 
-                  <div className="mt-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-xs text-indigo-305 text-indigo-400 leading-normal">
-                    <span className="font-bold flex items-center gap-1.5 mb-1 text-indigo-300">
+                  <div className={`mt-4 p-4 rounded-2xl border text-xs leading-normal transition-all duration-300 ${
+                    theme === "light"
+                      ? "bg-indigo-50/50 border-indigo-100 text-indigo-900"
+                      : "bg-indigo-500/5 border-indigo-500/10 text-indigo-400"
+                  }`}>
+                    <span className={`font-bold flex items-center gap-1.5 mb-1 ${
+                      theme === "light" ? "text-indigo-600" : "text-indigo-400"
+                    }`}>
                       <Database className="w-4 h-4" /> PDO PostgreSQL
                     </span>
-                    Tabel <code class="bg-slate-950 px-1 py-0.5 rounded text-[11px]">settings</code> dan <code class="bg-slate-950 px-1 py-0.5 rounded text-[11px]">anggotas</code> terintegrasi otomatis dengan skema inisialisasi awal.
+                    Tabel <code className={`px-1 py-0.5 rounded text-[11px] ${theme === "light" ? "bg-slate-200/60 text-slate-800" : "bg-slate-950 text-amber-200"}`}>settings</code> dan <code className={`px-1 py-0.5 rounded text-[11px] ${theme === "light" ? "bg-slate-200/60 text-slate-800" : "bg-slate-950 text-amber-200"}`}>anggotas</code> terintegrasi otomatis dengan skema inisialisasi awal.
                   </div>
                 </div>
 
                 {/* Code Window right */}
                 <div className="lg:col-span-9 flex flex-col gap-3">
-                  <div className="flex items-center justify-between bg-slate-900 px-6 py-4 rounded-t-2xl border-x border-t border-slate-800">
+                  <div className={`flex items-center justify-between px-6 py-4 rounded-t-2xl border-x border-t transition-all duration-300 ${
+                    theme === "light"
+                      ? "bg-slate-50 border-slate-205"
+                      : "bg-slate-900 border-slate-800"
+                  }`}>
                     <div className="flex items-center gap-2.5">
                       <span className="w-3 h-3 rounded-full bg-red-500"></span>
                       <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
                       <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                      <span className="text-xs font-mono text-slate-400 ml-2">{activePHPFile}</span>
+                      <span className={`text-xs font-mono ml-2 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>{activePHPFile}</span>
                     </div>
                     
                     <button
                       onClick={() => handleCopyCode(activePHPFile)}
-                      className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors text-xs font-medium px-4 py-2 rounded-lg border border-slate-700 cursor-pointer"
+                      className={`inline-flex items-center gap-2 transition-colors text-xs font-medium px-4 py-2 rounded-lg border cursor-pointer ${
+                        theme === "light"
+                          ? "bg-white hover:bg-slate-100 border-slate-300 text-slate-700"
+                          : "bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border-slate-700"
+                      }`}
                     >
                       {copiedFileName === activePHPFile ? (
                         <>
-                          <Check className="w-4 h-4 text-emerald-400" />
-                          <span className="text-emerald-400 font-bold">Tersalin!</span>
+                          <Check className="w-4 h-4 text-emerald-500" />
+                          <span className="text-emerald-500 font-bold">Tersalin!</span>
                         </>
                       ) : (
                         <>
@@ -1624,7 +1914,11 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="bg-slate-950 border-x border-b border-slate-800 rounded-b-2xl p-6 font-mono text-xs overflow-auto max-h-[550px] leading-relaxed text-slate-300 pointer-events-auto select-all">
+                  <div className={`border-x border-b rounded-b-2xl p-6 font-mono text-xs overflow-auto max-h-[550px] leading-relaxed pointer-events-auto select-all transition-all duration-305 ${
+                    theme === "light"
+                      ? "bg-slate-900 border-slate-205 text-slate-100"
+                      : "bg-slate-950 border-slate-800 text-slate-350"
+                  }`}>
                     <pre>{PHP_SOURCES[activePHPFile]}</pre>
                   </div>
                 </div>
@@ -1636,17 +1930,20 @@ export default function App() {
       </div>
 
       {/* Main footer layout matching PHP dashboard */}
-      <footer className="border-t border-slate-850 bg-[#060b13] py-10 shrink-0">
+      <footer className={`border-t py-10 shrink-0 transition-colors duration-300 ${
+        theme === "light"
+          ? "border-slate-200 bg-slate-50"
+          : "border-slate-850 bg-[#060b13]"
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left text-xs md:text-sm text-slate-500 font-mono">
           <div>
             <p>&copy; 2026 SISFO C '25. Sistem Informasi Kelas C 2025.</p>
-            <p className="text-[11px] text-slate-600 mt-1">Dibangun tanpa framework dengan Native PHP ditenagai Supabase PostgreSQL & Vercel.</p>
           </div>
           <div className="flex items-center gap-4 justify-center md:justify-end">
-            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("jadwal")?.scrollIntoView({ behavior: "smooth" }), 100); }} className="hover:text-slate-350 hover:text-slate-300 transition-colors cursor-pointer">Jadwal</button>
-            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("mahasiswa")?.scrollIntoView({ behavior: "smooth" }), 100); }} className="hover:text-slate-350 hover:text-slate-300 transition-colors cursor-pointer">Mahasiswa</button>
-            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("galeri")?.scrollIntoView({ behavior: "smooth" }), 100); }} className="hover:text-slate-350 hover:text-slate-300 transition-colors cursor-pointer">Galeri</button>
-            <button onClick={() => setView("login")} className="text-sky-500 hover:text-sky-450 transition-colors font-semibold cursor-pointer">Gateway Admin</button>
+            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("jadwal")?.scrollIntoView({ behavior: "smooth" }), 100); }} className={`transition-colors cursor-pointer ${theme === "light" ? "hover:text-slate-800 text-slate-500" : "hover:text-slate-300 text-slate-500"}`}>Jadwal</button>
+            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("mahasiswa")?.scrollIntoView({ behavior: "smooth" }), 100); }} className={`transition-colors cursor-pointer ${theme === "light" ? "hover:text-slate-800 text-slate-500" : "hover:text-slate-300 text-slate-500"}`}>Mahasiswa</button>
+            <button onClick={() => { setView("dashboard"); setTimeout(() => document.getElementById("galeri")?.scrollIntoView({ behavior: "smooth" }), 100); }} className={`transition-colors cursor-pointer ${theme === "light" ? "hover:text-slate-800 text-slate-500" : "hover:text-slate-300 text-slate-500"}`}>Galeri</button>
+            <button onClick={() => setView("login")} className="text-sky-600 hover:text-sky-500 transition-colors font-semibold cursor-pointer">Gateway Admin</button>
           </div>
         </div>
       </footer>
