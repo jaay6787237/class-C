@@ -70,10 +70,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Inline theme checkpoint to prevent light transition flashing
+        if (localStorage.getItem('sisfo-theme') === 'light') {
+            document.documentElement.classList.add('light');
+        }
+    </script>
     <style>
         body {
             background-color: #060b13;
             color: #f8fafc;
+        }
+        /* --- High Contrast Light Mode Overrides --- */
+        html.light body {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+        }
+        html.light nav a {
+            color: #475569 !important;
+        }
+        html.light nav a:hover {
+            color: #0284c7 !important;
+        }
+        html.light main > div {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.1);
+        }
+        html.light h1 {
+            color: #0f172a !important;
+        }
+        html.light label {
+            color: #475569 !important;
+        }
+        html.light input {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0d1e3d !important;
+        }
+        html.light input:focus {
+            border-color: #0284c7 !important;
+        }
+        html.light footer p {
+            color: #64748b !important;
         }
     </style>
 </head>

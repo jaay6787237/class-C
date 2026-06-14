@@ -69,6 +69,12 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SISFO C '25 - Sistem Informasi Kelas C 2025</title>
+    <!-- Light Mode Checkpoint -->
+    <script>
+        if (localStorage.getItem('sisfo-theme') === 'light') {
+            document.documentElement.classList.add('light');
+        }
+    </script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -231,6 +237,85 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
         .stagger-6 { transition-delay: 300ms; }
         .stagger-7 { transition-delay: 350ms; }
         .stagger-8 { transition-delay: 400ms; }
+
+        /* --- High Contrast Light Mode Overrides --- */
+        html.light body {
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        html.light header {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+        html.light header .font-display {
+            background: linear-gradient(to right, #0284c7, #0369a1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        html.light header a {
+            color: #475569 !important;
+        }
+        html.light header a:hover {
+            color: #0284c7 !important;
+        }
+        html.light header .header-stat-val {
+            color: #0f172a !important;
+        }
+        html.light header span.hidden.md\:inline-block {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #0284c7;
+        }
+        html.light main section {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        html.light main section h1 {
+            color: #0f172a !important;
+        }
+        html.light main section p {
+            color: #475569 !important;
+        }
+        html.light main section h2, html.light main section h3 {
+            color: #0f172a !important;
+        }
+        html.light main section span.text-slate-500, html.light main section text-slate-400 {
+            color: #64748b !important;
+        }
+        html.light .glass-card {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        html.light .glass-card:hover {
+            background-color: #ffffff !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 20px 25px -5px rgba(56, 189, 248, 0.15);
+        }
+        html.light .glass-card h3 {
+            color: #0f172a !important;
+        }
+        html.light .glass-card p {
+            color: #475569 !important;
+        }
+        html.light .glass-card span {
+            color: #64748b !important;
+        }
+        html.light footer {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.light footer p {
+            color: #64748b !important;
+        }
+        html.light footer a {
+            color: #475569 !important;
+        }
+        html.light footer a:hover {
+            color: #0284c7 !important;
+        }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500 selection:text-white min-h-screen flex flex-col">
@@ -303,16 +388,40 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
             </div>
             
             <div class="flex items-center gap-4">
-                <a href="#jadwal" class="hidden md:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors">Jadwal Kuliah</a>
-                <a href="#mahasiswa" class="hidden md:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors">Direktori Mahasiswa</a>
-                <a href="#galeri" class="hidden md:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors" >Galeri Kenangan</a>
+                <a href="#jadwal" class="hidden lg:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors">Jadwal Kuliah</a>
+                <a href="#mahasiswa" class="hidden lg:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors">Direktori Mahasiswa</a>
+                <a href="#galeri" class="hidden lg:inline-flex text-sm text-slate-300 hover:text-sky-400 font-medium transition-colors" >Galeri Kenangan</a>
+                
+                <!-- Class Statistics Container in Navigation header -->
+                <div class="hidden sm:flex flex-col items-end border-r border-navy-800/80 pr-4 mr-1">
+                    <span class="text-[9px] uppercase tracking-wider font-semibold text-slate-400">Class Statistics</span>
+                    <div class="flex gap-3 mt-0.5 text-[11px] font-mono">
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="font-bold text-white header-stat-val"><?php echo htmlspecialchars($jumlah_anggota); ?></span>
+                            <span class="text-[9px] opacity-60">Anggota</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="font-bold text-white header-stat-val"><?php echo count($jadwal_array) * 4; ?></span>
+                            <span class="text-[9px] opacity-60">SKS</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="font-bold text-white header-stat-val">3.82</span>
+                            <span class="text-[9px] opacity-60">Avg GP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2.5 rounded-xl border border-navy-700 bg-navy-800/85 hover:bg-navy-700 transition-all text-sky-400 cursor-pointer flex items-center justify-center shadow-lg" title="Ganti Tema">
+                    <i id="theme-toggle-icon" data-lucide="sun" class="w-4 h-4 text-amber-400 font-bold"></i>
+                </button>
                 
                 <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
                     <a href="/admin" class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all transform hover:-translate-y-0.5 border border-emerald-400/20">
                         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Panel Admin
                     </a>
                 <?php else: ?>
-                    <a href="/login" class="inline-flex items-center gap-2 bg-navy-800 hover:bg-navy-700 text-sky-300 hover:text-white font-medium text-sm px-5 py-2.5 rounded-xl border border-navy-700/80 transition-all hover:-translate-y-0.5">
+                    <a href="/login" class="inline-flex items-center gap-2 bg-navy-800 hover:bg-navy-700 text-sky-300 hover:text-white font-medium text-sm px-5 py-2.5 rounded-xl border border-navy-700/80 transition-all transform hover:-translate-y-0.5">
                         <i data-lucide="lock" class="w-4 h-4"></i> Login Admin
                     </a>
                 <?php endif; ?>
@@ -381,13 +490,24 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                         <?php endif; ?>
                     </div>
 
-                    <div class="bg-navy-950/80 border border-navy-800/80 rounded-2xl p-6 w-full max-w-xs shadow-xl backdrop-blur-md">
-                        <div class="text-center">
-                            <span class="text-slate-450 text-xs font-mono uppercase tracking-wider block text-slate-400">Anggota Kelas</span>
-                            <div class="font-mono font-black text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 mt-2">
-                                <?php echo htmlspecialchars($jumlah_anggota); ?>
+                    <div class="bg-navy-950/80 border border-navy-800/80 rounded-2xl p-5 w-full max-w-xs shadow-xl backdrop-blur-md flex flex-col gap-4 glass-card transition-all duration-300">
+                        <div class="text-center pb-2 border-b border-navy-800/40">
+                            <span class="text-[10px] text-sky-400 font-mono tracking-widest uppercase block">Statistik Akademik</span>
+                            <span class="font-display font-extrabold text-[#38bdf8] text-sm tracking-wider">SISFO C '25 REGULAR</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="text-center bg-navy-900/50 p-2 rounded-xl border border-navy-800/20">
+                                <span class="text-[9px] text-slate-400 font-mono block uppercase">Anggota</span>
+                                <span class="font-mono font-extrabold text-xl text-white block mt-1"><?php echo htmlspecialchars($jumlah_anggota); ?></span>
                             </div>
-                            <span class="text-[10px] text-sky-450/80 font-mono block mt-1 tracking-wider text-sky-400">SISTEM INFORMASI C</span>
+                            <div class="text-center bg-navy-900/50 p-2 rounded-xl border border-navy-800/20">
+                                <span class="text-[9px] text-slate-400 font-mono block uppercase">SKS</span>
+                                <span class="font-mono font-extrabold text-xl text-sky-400 block mt-1"><?php echo count($jadwal_array) * 4; ?></span>
+                            </div>
+                            <div class="text-center bg-navy-900/50 p-2 rounded-xl border border-navy-800/20">
+                                <span class="text-[9px] text-slate-400 font-mono block uppercase">Avg GP</span>
+                                <span class="font-mono font-extrabold text-xl text-indigo-400 block mt-1">3.82</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -581,6 +701,47 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
     <!-- Initialize Lucide Icons & Page Animations -->
     <script>
         lucide.createIcons();
+
+        // --- Theme Toggle Logic ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.classList.add('light');
+                if (themeToggleIcon) {
+                    themeToggleIcon.setAttribute('data-lucide', 'moon');
+                    themeToggleIcon.className = 'w-4 h-4 text-slate-800 animate-pulse';
+                }
+                if (themeToggleBtn) {
+                    themeToggleBtn.className = 'p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 cursor-pointer flex items-center justify-center shadow-lg';
+                }
+            } else {
+                document.documentElement.classList.remove('light');
+                if (themeToggleIcon) {
+                    themeToggleIcon.setAttribute('data-lucide', 'sun');
+                    themeToggleIcon.className = 'w-4 h-4 text-amber-400';
+                }
+                if (themeToggleBtn) {
+                    themeToggleBtn.className = 'p-2.5 rounded-xl border border-navy-700 bg-navy-800/85 hover:bg-navy-700 transition-all text-sky-400 cursor-pointer flex items-center justify-center shadow-lg';
+                }
+            }
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
+        // Initialize theme from storage
+        let activeTheme = localStorage.getItem('sisfo-theme') || 'dark';
+        applyTheme(activeTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                activeTheme = activeTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('sisfo-theme', activeTheme);
+                applyTheme(activeTheme);
+            });
+        }
 
         // --- 1. Cyber Welcome Screen Loader Logic ---
         document.addEventListener('DOMContentLoaded', () => {

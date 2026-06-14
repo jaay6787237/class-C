@@ -174,10 +174,85 @@ if (isset($_GET['status']) && $_GET['status'] === 'saved') {
     </script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Inline theme checkpoint to prevent light transition flashing
+        if (localStorage.getItem('sisfo-theme') === 'light') {
+            document.documentElement.classList.add('light');
+        }
+    </script>
     <style>
         body {
             background-color: #060b13;
             color: #f8fafc;
+        }
+        /* --- High Contrast Light Mode Overrides for Admin Control Panel --- */
+        html.light body {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+        }
+        html.light header {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        html.light header h1 {
+            color: #0f172a !important;
+        }
+        html.light header span.bg-indigo-500\/20 {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #4f46e5 !important;
+        }
+        html.light header a {
+            color: #475569 !important;
+        }
+        html.light header a:hover {
+            color: #0284c7 !important;
+        }
+        html.light main section {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        html.light main section h2 {
+            color: #0f172a !important;
+        }
+        html.light main section p {
+            color: #475569 !important;
+        }
+        html.light label {
+            color: #475569 !important;
+        }
+        html.light input, html.light select, html.light textarea {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html.light input:focus, html.light select:focus, html.light textarea:focus {
+            border-color: #0284c7 !important;
+            --tw-ring-color: #38bdf8 !important;
+        }
+        html.light .bg-navy-950, html.light .bg-navy-900 {
+            background-color: #f8fafc !important;
+        }
+        html.light .border-navy-800 {
+            border-color: #cbd5e1 !important;
+        }
+        html.light .text-slate-400 {
+            color: #475569 !important;
+        }
+        html.light .text-slate-500 {
+            color: #64748b !important;
+        }
+        html.light .table-container tr {
+            border-color: #e2e8f0 !important;
+        }
+        html.light .table-container input {
+            background-color: #f8fafc !important;
+        }
+        html.light .bg-navy-800\/40 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
         }
     </style>
 </head>
