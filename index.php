@@ -601,7 +601,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                     <p class="text-slate-400 mt-2 max-w-md mx-auto">Masuk ke Panel Admin untuk menginisialisasi atau mensinkronisasi data profil mahasiswa.</p>
                 </div>
             <?php else: ?>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php foreach ($anggotas_list as $index => $agt): ?>
                         <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col h-full scroll-reveal stagger-<?php echo ($index % 8) + 1; ?>">
                             <!-- Image container with strict external URL source -->
@@ -659,7 +659,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
                     <p class="text-slate-400 mt-2 max-w-md mx-auto">Media album belum terisi. Tambahkan tautan foto/video kenangan kelas di menu admin.</p>
                 </div>
             <?php else: ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 min-[540px]:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($media_array as $index => $med): ?>
                         <div class="glass-card border border-navy-850 rounded-2xl overflow-hidden group flex flex-col scroll-reveal stagger-<?php echo ($index % 8) + 1; ?>">
                             <div class="relative pt-[56.25%] w-full bg-navy-950 overflow-hidden shrink-0">

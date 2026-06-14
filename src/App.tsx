@@ -826,15 +826,11 @@ export default function App() {
                         whileHover={{ 
                           y: -6, 
                           scale: 1.03, 
-                          borderColor: theme === "light" ? "rgba(14, 165, 233, 0.45)" : "rgba(56, 189, 248, 0.45)", 
-                          boxShadow: theme === "light" 
-                            ? "0 10px 25px -10px rgba(14, 165, 233, 0.15)" 
-                            : "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
                         }}
-                        className={`group p-5 transition-all duration-300 flex flex-col justify-between cursor-pointer rounded-2xl border shadow-md ${
+                        className={`group p-5 transition-all duration-300 flex flex-col justify-between cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
                           theme === "light"
-                            ? "bg-white border-slate-200 hover:bg-slate-50/50"
-                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg"
+                            ? "bg-white border-slate-200 hover:border-sky-500/45 hover:bg-slate-50/50 hover:shadow-sky-500/15"
+                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:border-sky-500/40 hover:bg-slate-900/50 hover:backdrop-blur-lg hover:shadow-sky-500/20"
                         }`}
                       >
                         <div>
@@ -964,7 +960,7 @@ export default function App() {
                     <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Pencarian untuk "{mhsSearchQuery}" tidak cocok dengan data classmate manapun.</p>
                   </div>
                 ) : (
-                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="p-6 grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
                     {filteredStudents.map((agt, i) => (
                       <StudentCard key={i} agt={agt} index={i} theme={theme} />
                     ))}
@@ -1010,7 +1006,7 @@ export default function App() {
                     <p className={`text-xs mt-1 ${theme === "light" ? "text-slate-500" : "text-slate-400"}`}>Tautkan media kenangan kelas Anda di menu panel admin.</p>
                   </div>
                 ) : (
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="p-6 grid grid-cols-1 min-[540px]:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                     {configMedia.map((med, idx) => (
                       <motion.div 
                         key={idx} 
@@ -1021,15 +1017,11 @@ export default function App() {
                         whileHover={{ 
                           y: -6, 
                           scale: 1.03, 
-                          borderColor: theme === "light" ? "rgba(14, 165, 233, 0.45)" : "rgba(56, 189, 248, 0.45)", 
-                          boxShadow: theme === "light" 
-                            ? "0 10px 25px -10px rgba(14, 165, 233, 0.15)" 
-                            : "0 20px 40px -15px rgba(56, 189, 248, 0.3)" 
                         }}
-                        className={`overflow-hidden group flex flex-col justify-between transition-all duration-300 cursor-pointer rounded-2xl border shadow-md ${
+                        className={`overflow-hidden group flex flex-col justify-between transition-all duration-300 cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
                           theme === "light"
-                            ? "bg-white border-slate-200 hover:bg-slate-50/50"
-                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:bg-slate-900/50 hover:backdrop-blur-lg"
+                            ? "bg-white border-slate-200 hover:border-sky-500/45 hover:bg-slate-50/50 hover:shadow-sky-500/15"
+                            : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:border-sky-500/40 hover:bg-slate-900/50 hover:backdrop-blur-lg hover:shadow-sky-500/20"
                         }`}
                       >
                         <div className={`relative aspect-[16/9] w-full bg-slate-950 overflow-hidden shrink-0 border-b ${
