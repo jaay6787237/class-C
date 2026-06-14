@@ -151,7 +151,7 @@ function renderClassLogo($className = "w-6 h-6", $glow = true) {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .glass-card:hover {
-            transform: translateY(-8px) scale(1.03);
+            transform: translateY(-8px) scale(1.03) !important;
             border-color: rgba(56, 189, 248, 0.45);
             background-color: rgba(15, 27, 50, 0.6);
             backdrop-filter: blur(20px);

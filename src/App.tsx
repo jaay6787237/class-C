@@ -827,7 +827,7 @@ export default function App() {
                           y: -6, 
                           scale: 1.03, 
                         }}
-                        className={`group p-5 transition-all duration-300 flex flex-col justify-between cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
+                        className={`group p-5 transition-colors duration-300 flex flex-col justify-between cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
                           theme === "light"
                             ? "bg-white border-slate-200 hover:border-sky-500/45 hover:bg-slate-50/50 hover:shadow-sky-500/15"
                             : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:border-sky-500/40 hover:bg-slate-900/50 hover:backdrop-blur-lg hover:shadow-sky-500/20"
@@ -1018,7 +1018,7 @@ export default function App() {
                           y: -6, 
                           scale: 1.03, 
                         }}
-                        className={`overflow-hidden group flex flex-col justify-between transition-all duration-300 cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
+                        className={`overflow-hidden group flex flex-col justify-between transition-colors duration-300 cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
                           theme === "light"
                             ? "bg-white border-slate-200 hover:border-sky-500/45 hover:bg-slate-50/50 hover:shadow-sky-500/15"
                             : "bg-slate-950/40 backdrop-blur-md border-sky-500/10 hover:border-sky-500/40 hover:bg-slate-900/50 hover:backdrop-blur-lg hover:shadow-sky-500/20"

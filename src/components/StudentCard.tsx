@@ -62,7 +62,7 @@ export function StudentCard({ agt, index, theme = "dark" }: StudentCardProps) {
       whileHover={{ 
         scale: 1.03,
       }}
-      className={`relative flex flex-col h-full rounded-2xl border transition-all duration-300 ease-out cursor-pointer shadow-lg overflow-hidden group hover:shadow-2xl ${
+      className={`relative flex flex-col h-full rounded-2xl border transition-colors duration-300 ease-out cursor-pointer shadow-lg overflow-hidden group hover:shadow-2xl ${
         theme === "light"
           ? "bg-white/80 border-slate-200/80 hover:border-sky-500/45 hover:bg-slate-50/90 text-slate-750 hover:shadow-sky-500/15"
           : "bg-slate-950/45 border-sky-500/10 hover:border-sky-500/40 hover:bg-slate-900/40 hover:backdrop-blur-lg hover:shadow-sky-500/20"
