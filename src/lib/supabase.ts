@@ -1,13 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { Course, Student, MediaItem } from "../types";
 
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+// Fallback kredensial langsung yang diberikan pengguna di percakapan
+const fallbackUrl = "https://alziaszfozhbsehrcwwy.supabase.co";
+const fallbackAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsemlhc3pmb3poYnNlaHJjd3d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzI2MzIsImV4cCI6MjA5NjkwODYzMn0.F9E-CrYWdUXcrDoiEaOcEC9VHbGgj00mTzKDU8IhNfw";
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || fallbackUrl;
+const rawKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || fallbackAnonKey;
+
+// Supabase client membutuhkan root URL tanpa trailing /rest/v1/ atau /
+const cleanUrl = rawUrl ? rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "") : "";
+const cleanKey = rawKey ? rawKey.trim() : "";
+
+export const isSupabaseConfigured = Boolean(cleanUrl && cleanKey);
 
 export const supabaseClient = isSupabaseConfigured
-  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  ? createClient(cleanUrl, cleanKey)
   : null;
 
 /**
