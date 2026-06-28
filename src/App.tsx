@@ -30,12 +30,22 @@ import {
   Search,
   X,
   Sun,
-  Moon
+  Moon,
+  Video
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Course, Student, MediaItem, Settings } from "./types";
 import { StudentCard } from "./components/StudentCard";
 import { PHP_SOURCES } from "./phpSources";
+import { 
+  isSupabaseConfigured,
+  fetchSettingsCloud,
+  saveSettingsCloud,
+  fetchStudentsCloud,
+  saveStudentsCloud,
+  fetchMediaCloud,
+  saveMediaCloud
+} from "./lib/supabase";
 
 // Geometric Hexagonal Logo alignment with user uploaded image
 export function ClassLogo({ className = "w-12 h-12", glow = true }: { className?: string; glow?: boolean }) {
@@ -196,6 +206,10 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [successSaveNote, setSuccessSaveNote] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isCloudLoading, setIsCloudLoading] = useState(false);
+  const [cloudLoadError, setCloudLoadError] = useState<string | null>(null);
+  const [isSyncingWithSupabase, setIsSyncingWithSupabase] = useState(false);
+  const [supabaseSyncError, setSupabaseSyncError] = useState<string | null>(null);
 
   // Core local states mimicking Postgres
   const [configJumlahAnggota, setConfigJumlahAnggota] = useState<number>(12);
@@ -262,39 +276,109 @@ export default function App() {
     return () => clearInterval(loaderInterval);
   }, []);
 
-  // Load from LocalStorage or seed defaults
+  // Load from LocalStorage or seed defaults & sync with Supabase if configured
   useEffect(() => {
-    const localSettle = localStorage.getItem("sisfo_settings");
-    const localStudents = localStorage.getItem("sisfo_students");
-    const localMedia = localStorage.getItem("sisfo_media");
-    const localLogged = localStorage.getItem("sisfo_logged_in");
+    let initialJumlah = 12;
+    let initialJadwal = defaultJadwal;
+    let initialStudents = defaultStudents;
+    let initialMedia = defaultMedia;
+    let initialLogo = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop";
 
-    if (localSettle) {
-      const parsed = JSON.parse(localSettle);
-      setConfigJumlahAnggota(parsed.jumlah_anggota || 12);
-      setConfigJadwal(parsed.jadwal || defaultJadwal);
-      setConfigLogoUrl(parsed.logo_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop");
-    } else {
+    // 1. Initial Load from LocalStorage immediately for instant UI
+    try {
+      const localSettle = localStorage.getItem("sisfo_settings");
+      const localStudents = localStorage.getItem("sisfo_students");
+      const localMedia = localStorage.getItem("sisfo_media");
+      const localLogged = localStorage.getItem("sisfo_logged_in");
+
+      if (localSettle) {
+        const parsed = JSON.parse(localSettle);
+        initialJumlah = parsed.jumlah_anggota || 12;
+        initialJadwal = parsed.jadwal || defaultJadwal;
+        initialLogo = parsed.logo_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop";
+        setConfigJumlahAnggota(initialJumlah);
+        setConfigJadwal(initialJadwal);
+        setConfigLogoUrl(initialLogo);
+      } else {
+        setConfigJumlahAnggota(12);
+        setConfigJadwal(defaultJadwal);
+        setConfigLogoUrl(initialLogo);
+      }
+
+      if (localStudents) {
+        initialStudents = JSON.parse(localStudents);
+        setConfigStudents(initialStudents);
+      } else {
+        setConfigStudents(defaultStudents);
+      }
+
+      if (localMedia) {
+        initialMedia = JSON.parse(localMedia);
+        setConfigMedia(initialMedia);
+      } else {
+        setConfigMedia(defaultMedia);
+      }
+
+      if (localLogged === "true") {
+        setIsAdminLoggedIn(true);
+      }
+    } catch (error) {
+      console.error("Gagal memuat konfigurasi dari LocalStorage, memulihkan defaults:", error);
       setConfigJumlahAnggota(12);
       setConfigJadwal(defaultJadwal);
-      setConfigLogoUrl("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&h=200&fit=crop");
-    }
-
-    if (localStudents) {
-      setConfigStudents(JSON.parse(localStudents));
-    } else {
       setConfigStudents(defaultStudents);
-    }
-
-    if (localMedia) {
-      setConfigMedia(JSON.parse(localMedia));
-    } else {
       setConfigMedia(defaultMedia);
+      setConfigLogoUrl(initialLogo);
     }
 
-    if (localLogged === "true") {
-      setIsAdminLoggedIn(true);
-    }
+    // 2. If Supabase is configured, fetch the most fresh data from Supabase Cloud
+    const loadFromSupabaseCloud = async () => {
+      if (!isSupabaseConfigured) return;
+      setIsCloudLoading(true);
+      setCloudLoadError(null);
+      try {
+        const cloudSettings = await fetchSettingsCloud();
+        const cloudStudents = await fetchStudentsCloud();
+        const cloudMedia = await fetchMediaCloud();
+
+        let updatedJumlah = initialJumlah;
+        let updatedLogoUrl = initialLogo;
+        let updatedJadwal = initialJadwal;
+        let updatedStudents = initialStudents;
+        let updatedMedia = initialMedia;
+
+        if (cloudSettings) {
+          setConfigJumlahAnggota(cloudSettings.jumlah_anggota);
+          setConfigLogoUrl(cloudSettings.logo_url);
+          setConfigJadwal(cloudSettings.jadwal);
+          updatedJumlah = cloudSettings.jumlah_anggota;
+          updatedLogoUrl = cloudSettings.logo_url;
+          updatedJadwal = cloudSettings.jadwal;
+        }
+
+        if (cloudStudents && cloudStudents.length > 0) {
+          setConfigStudents(cloudStudents);
+          updatedStudents = cloudStudents;
+        }
+
+        if (cloudMedia && cloudMedia.length > 0) {
+          setConfigMedia(cloudMedia);
+          updatedMedia = cloudMedia;
+        }
+
+        // Cache the fresh cloud data in local storage
+        localStorage.setItem("sisfo_settings", JSON.stringify({ jumlah_anggota: updatedJumlah, jadwal: updatedJadwal, logo_url: updatedLogoUrl }));
+        localStorage.setItem("sisfo_students", JSON.stringify(updatedStudents));
+        localStorage.setItem("sisfo_media", JSON.stringify(updatedMedia));
+      } catch (err: any) {
+        console.error("Gagal memuat data dari Supabase Cloud:", err);
+        setCloudLoadError(err.message || "Gagal sinkronisasi data dari Supabase Cloud");
+      } finally {
+        setIsCloudLoading(false);
+      }
+    };
+
+    loadFromSupabaseCloud();
   }, []);
 
   // Sync state to localstorage helper
@@ -388,7 +472,7 @@ export default function App() {
   };
 
   // Save admin edits
-  const handleAdminFormSave = (e: React.FormEvent) => {
+  const handleAdminFormSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate student photo URL format on the client side
@@ -403,12 +487,32 @@ export default function App() {
     }
 
     setValidationError(null);
+    setIsSyncingWithSupabase(true);
+    setSupabaseSyncError(null);
+
+    // Save state to LocalStorage (works immediately)
     saveStateToLocalStorage(configJumlahAnggota, configJadwal, configStudents, configMedia, configLogoUrl);
-    setSuccessSaveNote("Simpan Berhasil! Data kelas Anda berhasil diperbarui di cloud statis dan disinkronkan ke local storage preview ini.");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => {
-      setSuccessSaveNote(null);
-    }, 5000);
+
+    try {
+      if (isSupabaseConfigured) {
+        await saveSettingsCloud(configJumlahAnggota, configLogoUrl, configJadwal);
+        await saveStudentsCloud(configStudents);
+        await saveMediaCloud(configMedia);
+        setSuccessSaveNote("Simpan Berhasil! Data kelas Anda telah berhasil disinkronkan langsung ke database Supabase Cloud dan local storage browser.");
+      } else {
+        setSuccessSaveNote("Simpan Berhasil! Data kelas Anda berhasil didelegasikan ke local storage (Konfigurasi Supabase belum aktif).");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setSupabaseSyncError(`Gagal sinkronisasi Supabase: ${err.message || err}. Harap pastikan tabel-tabel sisfo telah dibuat di database Supabase Anda.`);
+      setSuccessSaveNote("Tersimpan Lokal: Gagal sinkronisasi data awan. Data tersimpan di web local storage browser Anda.");
+    } finally {
+      setIsSyncingWithSupabase(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        setSuccessSaveNote(null);
+      }, 8000);
+    }
   };
 
   return (
@@ -437,18 +541,13 @@ export default function App() {
               <motion.div 
                 animate={{
                   scale: [1, 1.05, 1],
-                  filter: [
-                    "drop-shadow(0 0 15px rgba(56,189,248,0.4))",
-                    "drop-shadow(0 0 30px rgba(56,189,248,0.7))",
-                    "drop-shadow(0 0 15px rgba(56,189,248,0.4))"
-                  ]
                 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="mb-8"
+                className="mb-8 drop-shadow-[0_0_20px_rgba(56,189,248,0.55)] animate-pulse"
               >
                 {!configLogoUrl || configLogoUrl.includes("unsplash.com/photo-1618005182384-a83a8bd57fbe") ? (
                   <ClassLogo className="w-32 h-32" />
@@ -1018,6 +1117,11 @@ export default function App() {
                           y: -6, 
                           scale: 1.03, 
                         }}
+                        onClick={() => {
+                          if (med.url) {
+                            window.open(med.url, "_blank", "noopener,noreferrer");
+                          }
+                        }}
                         className={`overflow-hidden group flex flex-col justify-between transition-colors duration-300 cursor-pointer rounded-2xl border shadow-md hover:shadow-xl ${
                           theme === "light"
                             ? "bg-white border-slate-200 hover:border-sky-500/45 hover:bg-slate-50/50 hover:shadow-sky-500/15"
@@ -1028,10 +1132,23 @@ export default function App() {
                           theme === "light" ? "border-slate-100" : "border-sky-500/10"
                         }`}>
                           {med.tipe === "video" ? (
-                            <video controls className="absolute inset-0 w-full h-full object-cover">
-                              <source src={med.url} type="video/mp4" />
-                              Browser Anda tidak mendukung HTML5 Video.
-                            </video>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-4 select-none">
+                              {/* Glowing background gradient inside video card */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-violet-950/30 via-slate-950 to-slate-950 pointer-events-none" />
+                              <div className="relative p-3 rounded-full bg-violet-600/15 text-violet-400 border border-violet-500/20 group-hover:bg-violet-600 group-hover:text-white group-hover:scale-105 group-hover:shadow-[0_0_15px_rgba(124,58,237,0.3)] transition-all duration-300 mb-2">
+                                <Video className="w-5 h-5 animate-pulse" />
+                              </div>
+                              <span className="relative text-[9px] font-mono font-bold text-violet-400 tracking-wider uppercase mb-1">
+                                VIDEO MEMORY
+                              </span>
+                              <span className="relative text-[9px] text-slate-400 text-center line-clamp-1 max-w-[85%] font-mono">
+                                {med.url.replace(/^https?:\/\/(www\.)?/, "")}
+                              </span>
+                              
+                              <div className="absolute top-2.5 right-2.5 bg-violet-500/10 border border-violet-500/20 rounded px-1.5 py-0.5 text-[8px] font-mono font-bold text-violet-400 tracking-wider flex items-center gap-1">
+                                <ExternalLink className="w-2.5 h-2.5" /> BUKA TAUTAN
+                              </div>
+                            </div>
                           ) : (
                             <>
                               <img 
@@ -1181,6 +1298,79 @@ export default function App() {
                   <span className="font-semibold">{validationError}</span>
                 </div>
               )}
+
+              {/* Supabase Connectivity Status Card */}
+              <div className={`p-6 rounded-3xl border mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-300 ${
+                isSupabaseConfigured 
+                  ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300"
+                  : "bg-amber-500/5 border-amber-500/20 text-amber-300"
+              }`}>
+                <div className="flex-grow w-full">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl border shrink-0 ${
+                      isSupabaseConfigured
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    }`}>
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-sans font-bold text-white text-base">
+                        {isSupabaseConfigured 
+                          ? "Status: Terhubung ke Supabase Cloud (Live)" 
+                          : "Status: Menjalankan Local Sandbox"}
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        {isSupabaseConfigured
+                          ? "Data akademik, jadwal, mahasiswa, dan galeri tersinkronisasi dua arah ke Supabase Cloud."
+                          : "Kunci Supabase belum dipasang. Silakan gunakan local preview atau ikuti panduan di bawah untuk menyambungkan database awan."}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isSupabaseConfigured && (
+                    <div className="mt-4 p-4 bg-[#060b13] border border-slate-800 rounded-2xl text-slate-300 text-xs font-sans space-y-3">
+                      <p className="font-bold text-amber-400 flex items-center gap-2">
+                        <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                        Panduan Menghubungkan Supabase Cloud secara Live:
+                      </p>
+                      <ol className="list-decimal list-inside space-y-2 text-slate-400 pl-1 leading-relaxed">
+                        <li>Buka proyek <strong>Supabase</strong> Anda, lalu navigasikan ke <strong>Project Settings &gt; API</strong>.</li>
+                        <li>Ambil <strong>Project URL</strong> dan masukkan ke AI Studio sebagai secret <code>VITE_SUPABASE_URL</code>.</li>
+                        <li>Ambil <strong>anon public API Key</strong> dan masukkan ke AI Studio sebagai secret <code>VITE_SUPABASE_ANON_KEY</code>.</li>
+                        <li>
+                          Buka tab <strong>SQL Editor</strong> di Supabase Anda, buat kueri baru (New Query), masukkan kode SQL berikut untuk membuat tabel-tabel, lalu klik <strong>Run</strong>:
+                          <pre className="mt-2 bg-slate-950 p-3.5 rounded-xl font-mono text-[10px] text-emerald-400 overflow-x-auto border border-slate-850 select-all leading-normal whitespace-pre block max-h-48 overflow-y-auto">
+{`-- 1. Tabel untuk metadata dasar
+create table if not exists public.sisfo_settings (
+  id text primary key,
+  jumlah_anggota integer default 12,
+  logo_url text,
+  jadwal jsonb
+);
+
+-- 2. Tabel untuk profil mahasiswa
+create table if not exists public.sisfo_students (
+  id text primary key,
+  nama text not null,
+  foto text,
+  bio text
+);
+
+-- 3. Tabel untuk galeri media
+create table if not exists public.sisfo_media (
+  id uuid default gen_random_uuid() primary key,
+  tipe text not null,
+  url text not null,
+  keterangan text
+);`}
+                          </pre>
+                        </li>
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Dynamic packing control form */}
               <form onSubmit={handleAdminFormSave} className="flex flex-col gap-10">
@@ -1515,24 +1705,45 @@ export default function App() {
                 </section>
 
                 {/* Sticky Action Navigation Control banner */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sticky bottom-4 z-30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
-                  <div className="flex items-center gap-2 text-xs text-slate-400 font-mono text-center sm:text-left">
-                    <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></div>
-                    <span>Data yang diubah diperbarui langsung di Supabase Cloud saat Anda meng-klik Simpan.</span>
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sticky bottom-4 z-30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
+                  <div className="flex flex-col gap-1 text-xs text-slate-400 font-sans text-center md:text-left">
+                    <div className="flex items-center justify-center md:justify-start gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${isSupabaseConfigured ? "bg-emerald-400 animate-pulse" : "bg-orange-400"}`}></div>
+                      <span className="font-mono text-[11px] font-semibold">
+                        {isSupabaseConfigured 
+                          ? "SINKRONISASI SUPABASE CLOUD AKTIF" 
+                          : "SINKRONISASI BROWSER LOCAL STORAGE (SUPABASE BELUM AKTIF)"}
+                      </span>
+                    </div>
+                    {supabaseSyncError && (
+                      <p className="text-red-400 text-[11px] leading-tight mt-0.5 max-w-xl">{supabaseSyncError}</p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                  <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
                     <button 
                       type="button"
                       onClick={() => setView("dashboard")}
-                      className="w-1/2 sm:w-auto text-center text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 border border-slate-700 hover:bg-slate-750 px-5 py-3 rounded-xl transition-all cursor-pointer"
+                      disabled={isSyncingWithSupabase}
+                      className="w-1/2 md:w-auto text-center text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 border border-slate-700 hover:bg-slate-750 px-5 py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                     >
                       Batal
                     </button>
                     <button 
                       type="submit" 
-                      className="w-1/2 sm:w-auto bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs md:text-sm px-6 py-3 rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                      disabled={isSyncingWithSupabase}
+                      className="w-1/2 md:w-auto bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs md:text-sm px-6 py-3 rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-80"
                     >
-                      <Save className="w-4 h-4" /> Simpan & Sinkronkan
+                      {isSyncingWithSupabase ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Menyinkronkan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" /> 
+                          <span>{isSupabaseConfigured ? "Simpan ke Supabase" : "Simpan Lokal"}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
