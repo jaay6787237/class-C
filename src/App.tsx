@@ -1109,10 +1109,10 @@ export default function App() {
                     {configMedia.map((med, idx) => (
                       <motion.div 
                         key={idx} 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: false }}
-                        transition={{ duration: 0.5, delay: idx * 0.05 }}
+                        initial={{ opacity: 0, y: 35 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.7, delay: idx * 0.08, ease: [0.21, 1.02, 0.43, 1.01] }}
                         whileHover={{ 
                           y: -6, 
                           scale: 1.03, 
