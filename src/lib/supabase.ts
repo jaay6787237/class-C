@@ -9,10 +9,22 @@ const rawUrl = (import.meta as any).env?.VITE_SUPABASE_URL || fallbackUrl;
 const rawKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || fallbackAnonKey;
 
 // Supabase client membutuhkan root URL tanpa trailing /rest/v1/ atau /
-const cleanUrl = rawUrl ? rawUrl.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "") : "";
-const cleanKey = rawKey ? rawKey.trim() : "";
+const cleanUrl = rawUrl ? String(rawUrl).replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "").trim() : "";
+const cleanKey = rawKey ? String(rawKey).trim() : "";
 
-export const isSupabaseConfigured = Boolean(cleanUrl && cleanKey);
+const isValidUrl = (url: string) => {
+  return url.startsWith("http://") || url.startsWith("https://");
+};
+
+export const isSupabaseConfigured = Boolean(
+  cleanUrl && 
+  cleanUrl !== "undefined" && 
+  cleanUrl !== "null" && 
+  isValidUrl(cleanUrl) && 
+  cleanKey && 
+  cleanKey !== "undefined" && 
+  cleanKey !== "null"
+);
 
 export const supabaseClient = isSupabaseConfigured
   ? createClient(cleanUrl, cleanKey)
